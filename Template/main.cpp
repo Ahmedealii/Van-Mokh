@@ -70,6 +70,7 @@ float g_cutsceneTimer = 0.0f;
 
 bool g_laneSelected[NUM_LANES] = { false, false, false, false };
 int  g_hoveredLane = -1;
+int  g_lastSelectedLane = -1;
 
 int  g_coins = 30;
 bool g_hasEarnedExtraCoins = false;
@@ -162,17 +163,12 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
     if (g_gameState == STATE_PLAYING) {
         if (g_hoveredCard != -1) {
             g_selectedCard = g_hoveredCard;
-            for (int i = 0; i < NUM_LANES; ++i) {
-                if (g_laneSelected[i]) {
-                    spawnPlayerInLane(i, (PlayerType)g_selectedCard);
-                    break;
-                }
-            }
+            deploySelectedUnit();
             return;
         }
 
         if (g_hoveredLane != -1) {
-            selectSingleLane(g_hoveredLane);
+            toggleLaneSelection(g_hoveredLane);
         }
     }
 }
@@ -210,11 +206,7 @@ void keyCallback(GLFWwindow*, int key, int, int action, int)
         }
     }
     else if (key == GLFW_KEY_SPACE || key == GLFW_KEY_ENTER) {
-        for (int i = 0; i < NUM_LANES; ++i) {
-            if (g_laneSelected[i]) {
-                spawnPlayerInLane(i, (PlayerType)g_selectedCard);
-            }
-        }
+        deploySelectedUnit();
     }
 }
 
@@ -348,8 +340,9 @@ int main()
                 glm::vec3 laneCol = (i % 2 == 0) ? glm::vec3(0.32f, 0.65f, 0.24f) : glm::vec3(0.27f, 0.58f, 0.20f);
 
                 float highlight = 0.0f;
-                if (g_laneSelected[i]) highlight = 0.38f;
-                else if (g_hoveredLane == i && g_gameState == STATE_PLAYING) highlight = 0.22f;
+                if (i == g_lastSelectedLane && g_laneSelected[i]) highlight = 0.45f;
+                else if (g_laneSelected[i]) highlight = 0.28f;
+                else if (g_hoveredLane == i && g_gameState == STATE_PLAYING) highlight = 0.18f;
 
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, cy), glm::vec2(1.73f, h - 0.01f), 0.0f, laneCol, 0.0f, highlight);
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]), glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));

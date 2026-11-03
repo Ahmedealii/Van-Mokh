@@ -66,6 +66,7 @@ const int PLAYER_COST[3] = { 10, 20, 30 };
 
 extern GameState g_gameState;
 extern bool g_laneSelected[NUM_LANES];
+extern int  g_lastSelectedLane;
 extern int  g_coins;
 extern bool g_hasEarnedExtraCoins;
 extern int  g_selectedCard;
@@ -142,14 +143,22 @@ inline void resetGame()
     startWave(1);
 }
 
-inline void selectSingleLane(int lane)
+inline void toggleLaneSelection(int lane)
 {
     if (lane < 0 || lane >= NUM_LANES) return;
-    bool wasSelected = g_laneSelected[lane];
-    for (int i = 0; i < NUM_LANES; ++i) {
-        g_laneSelected[i] = false;
+    g_laneSelected[lane] = !g_laneSelected[lane];
+    if (g_laneSelected[lane]) {
+        g_lastSelectedLane = lane;
     }
-    g_laneSelected[lane] = !wasSelected;
+    else if (g_lastSelectedLane == lane) {
+        g_lastSelectedLane = -1;
+        for (int i = 0; i < NUM_LANES; ++i) {
+            if (g_laneSelected[i]) {
+                g_lastSelectedLane = i;
+                break;
+            }
+        }
+    }
 }
 
 inline void spawnPlayerInLane(int lane, PlayerType type)
@@ -172,6 +181,23 @@ inline void spawnPlayerInLane(int lane, PlayerType type)
     p.inMeleeCombat = false;
     p.alive = true;
     g_players.push_back(p);
+}
+
+inline void deploySelectedUnit()
+{
+    if (g_lastSelectedLane >= 0 && g_lastSelectedLane < NUM_LANES && g_laneSelected[g_lastSelectedLane]) {
+        spawnPlayerInLane(g_lastSelectedLane, (PlayerType)g_selectedCard);
+    }
+    else {
+        // Fallback: spawn in first active selected lane if any
+        for (int i = 0; i < NUM_LANES; ++i) {
+            if (g_laneSelected[i]) {
+                spawnPlayerInLane(i, (PlayerType)g_selectedCard);
+                g_lastSelectedLane = i;
+                break;
+            }
+        }
+    }
 }
 
 inline void updateGameplay(float dt)
