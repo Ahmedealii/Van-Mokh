@@ -68,17 +68,9 @@ GLint locUseOverride = -1;
 GameState g_gameState = STATE_MAIN_MENU;
 float g_cutsceneTimer = 0.0f;
 
-const int NUM_LANES = 4;
-const float LANE_BOTTOM_Y[NUM_LANES] = { 0.20f, -0.15f, -0.50f, -0.85f };
-const float LANE_TOP_Y[NUM_LANES] = { 0.55f,  0.20f, -0.15f, -0.50f };
-const float LANE_CENTER_Y[NUM_LANES] = { 0.375f, 0.025f, -0.325f, -0.675f };
-const float LANE_LEFT_X = -0.78f;
-const float LANE_RIGHT_X = 0.95f;
-
 bool g_laneSelected[NUM_LANES] = { false, false, false, false };
 int  g_hoveredLane = -1;
 
-const int PLAYER_COST[3] = { 10, 20, 30 };
 int  g_coins = 30;
 bool g_hasEarnedExtraCoins = false;
 int  g_selectedCard = 0;
@@ -94,237 +86,6 @@ int   g_enemiesToSpawn = 0;
 float g_spawnTimer = 0.0f;
 
 glm::vec2 g_cursorNDC(0.0f, 0.0f);
-
-inline void startWave(int wave)
-{
-    g_currentWave = wave;
-    g_enemiesToSpawn = wave * 3 + 2;
-    g_spawnTimer = 0.0f;
-}
-
-inline void resetGame()
-{
-    g_players.clear();
-    g_enemies.clear();
-    g_projectiles.clear();
-    g_collectibles.clear();
-    g_coins = 30;
-    g_hasEarnedExtraCoins = false;
-    for (int i = 0; i < NUM_LANES; ++i) {
-        g_laneSelected[i] = false;
-    }
-    startWave(1);
-}
-void updateGameplay(float dt)
-{
-    if (g_enemiesToSpawn > 0) {
-        g_spawnTimer -= dt;
-        if (g_spawnTimer <= 0.0f) {
-            spawnEnemyForCurrentWave(g_currentWave, g_enemies, LANE_RIGHT_X);
-            g_enemiesToSpawn--;
-            g_spawnTimer = 3.2f;
-        }
-    }
-    else {
-        bool anyEnemyAlive = false;
-        for (int i = 0; i < (int)g_enemies.size(); ++i) {
-            if (g_enemies[i].alive) { anyEnemyAlive = true; break; }
-        }
-        if (!anyEnemyAlive) {
-            if (g_currentWave < 3) {
-                startWave(g_currentWave + 1);
-            }
-            else {
-                g_gameState = STATE_WIN;
-                return;
-            }
-        }
-    }
-
-    for (int i = 0; i < (int)g_players.size(); ++i) g_players[i].inMeleeCombat = false;
-    for (int i = 0; i < (int)g_enemies.size(); ++i) g_enemies[i].inMeleeCombat = false;
-
-    for (int i = 0; i < (int)g_players.size(); ++i) {
-        if (!g_players[i].alive) continue;
-        for (int j = 0; j < (int)g_enemies.size(); ++j) {
-            if (!g_enemies[j].alive || g_enemies[j].lane != g_players[i].lane) continue;
-            if (std::abs(g_players[i].x - g_enemies[j].x) <= 0.085f) {
-                g_players[i].inMeleeCombat = true;
-                g_enemies[j].inMeleeCombat = true;
-            }
-        }
-    }
-
-    for (int i = 0; i < (int)g_players.size(); ++i) {
-        PlayerUnit& p = g_players[i];
-        if (!p.alive) continue;
-
-        if (p.isJumping || p.isDucking) {
-            p.actionTimer -= dt;
-            if (p.actionTimer <= 0.0f) {
-                p.isJumping = false;
-                p.isDucking = false;
-            }
-        }
-
-        if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
-            p.x += 0.14f * dt;
-            if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
-        }
-
-        p.attackTimer -= dt;
-        if (p.attackTimer <= 0.0f) {
-            if (p.type == PLAYER_RANGED) {
-                Projectile proj;
-                proj.lane = p.lane;
-                proj.x = p.x + 0.04f;
-                proj.fromPlayer = true;
-                proj.isHigh = false;
-                proj.damage = 1;
-                proj.hitting = false;
-                proj.hitAnimTimer = 0.0f;
-                proj.alive = true;
-                g_projectiles.push_back(proj);
-                p.attackTimer = 1.4f;
-            }
-            else if (p.type == PLAYER_MELEE) {
-                for (int j = 0; j < (int)g_enemies.size(); ++j) {
-                    EnemyUnit& e = g_enemies[j];
-                    if (e.alive && e.lane == p.lane && std::abs(p.x - e.x) <= 0.10f) {
-                        e.hp -= 1;
-                        if (e.hp <= 0) {
-                            e.alive = false;
-                            Collectible c;
-                            c.lane = e.lane;
-                            c.x = e.x;
-                            c.value = 10;
-                            c.alive = true;
-                            g_collectibles.push_back(c);
-                        }
-                        break;
-                    }
-                }
-                p.attackTimer = 1.0f;
-            }
-        }
-
-        for (int j = 0; j < (int)g_collectibles.size(); ++j) {
-            Collectible& c = g_collectibles[j];
-            if (c.alive && c.lane == p.lane && std::abs(p.x - c.x) <= 0.075f) {
-                c.alive = false;
-                g_coins += c.value;
-                g_hasEarnedExtraCoins = true;
-            }
-        }
-    }
-
-    for (int i = 0; i < (int)g_enemies.size(); ++i) {
-        EnemyUnit& e = g_enemies[i];
-        if (!e.alive) continue;
-
-        float speed = (e.type == ENEMY_HARD_MELEE) ? 0.19f : 0.10f;
-        if (!e.inMeleeCombat) {
-            e.x -= speed * dt;
-        }
-
-        if (e.x <= LANE_LEFT_X) {
-            g_gameState = STATE_LOSE;
-            return;
-        }
-
-        e.attackTimer -= dt;
-        if (e.attackTimer <= 0.0f) {
-            if (e.type == ENEMY_EASY_UPPER || e.type == ENEMY_MEDIUM_LOWER) {
-                Projectile proj;
-                proj.lane = e.lane;
-                proj.x = e.x - 0.04f;
-                proj.fromPlayer = false;
-                proj.isHigh = (e.type == ENEMY_EASY_UPPER);
-                proj.damage = 1;
-                proj.hitting = false;
-                proj.hitAnimTimer = 0.0f;
-                proj.alive = true;
-                g_projectiles.push_back(proj);
-                e.attackTimer = 1.8f;
-            }
-            else if (e.type == ENEMY_HARD_MELEE) {
-                for (int j = 0; j < (int)g_players.size(); ++j) {
-                    PlayerUnit& p = g_players[j];
-                    if (p.alive && p.lane == e.lane && std::abs(p.x - e.x) <= 0.10f) {
-                        p.hp -= 2;
-                        if (p.hp <= 0) p.alive = false;
-                        break;
-                    }
-                }
-                e.attackTimer = 1.1f;
-            }
-        }
-    }
-
-    for (int i = 0; i < (int)g_projectiles.size(); ++i) {
-        Projectile& proj = g_projectiles[i];
-        if (!proj.alive) continue;
-
-        if (proj.hitting) {
-            proj.hitAnimTimer -= dt;
-            if (proj.hitAnimTimer <= 0.0f) proj.alive = false;
-            continue;
-        }
-
-        proj.x += (proj.fromPlayer ? 0.55f : -0.45f) * dt;
-        if (proj.x < LANE_LEFT_X || proj.x > LANE_RIGHT_X + 0.05f) {
-            proj.alive = false;
-            continue;
-        }
-
-        if (proj.fromPlayer) {
-            for (int j = 0; j < (int)g_enemies.size(); ++j) {
-                EnemyUnit& e = g_enemies[j];
-                if (e.alive && e.lane == proj.lane && std::abs(proj.x - e.x) <= 0.045f) {
-                    e.hp -= proj.damage;
-                    proj.hitting = true;
-                    proj.hitAnimTimer = 0.20f;
-                    if (e.hp <= 0) {
-                        e.alive = false;
-                        Collectible c;
-                        c.lane = e.lane;
-                        c.x = e.x;
-                        c.value = 10;
-                        c.alive = true;
-                        g_collectibles.push_back(c);
-                    }
-                    break;
-                }
-            }
-        }
-        else {
-            float defenseX = -999.0f;
-            for (int j = 0; j < (int)g_players.size(); ++j) {
-                if (g_players[j].alive && g_players[j].lane == proj.lane && g_players[j].type == PLAYER_DEFENSE) {
-                    if (g_players[j].x > defenseX) defenseX = g_players[j].x;
-                }
-            }
-
-            for (int j = 0; j < (int)g_players.size(); ++j) {
-                PlayerUnit& p = g_players[j];
-                if (!p.alive || p.lane != proj.lane) continue;
-
-                if (p.type != PLAYER_DEFENSE && p.x < defenseX) continue;
-
-                if (std::abs(proj.x - p.x) <= 0.045f) {
-                    if (p.type != PLAYER_DEFENSE) {
-                        if (proj.isHigh && p.isDucking) continue;
-                        if (!proj.isHigh && p.isJumping) continue;
-                    }
-                    p.hp -= proj.damage;
-                    proj.alive = false;
-                    if (p.hp <= 0) p.alive = false;
-                    break;
-                }
-            }
-        }
-    }
-}
 
 void framebufferSizeCallback(GLFWwindow*, int width, int height)
 {
@@ -356,28 +117,6 @@ void cursorPosCallback(GLFWwindow*, double xpos, double ypos)
             break;
         }
     }
-}
-
-void spawnPlayerInLane(int lane, PlayerType type)
-{
-    int cost = PLAYER_COST[(int)type];
-    if (!isCardUnlocked((int)type, g_coins, g_hasEarnedExtraCoins) || g_coins < cost) return;
-
-    g_coins -= cost;
-
-    PlayerUnit p;
-    p.type = type;
-    p.lane = lane;
-    p.x = (type == PLAYER_DEFENSE) ? -0.35f : LANE_LEFT_X + 0.04f;
-    p.maxHp = (type == PLAYER_DEFENSE) ? 7 : 5;
-    p.hp = p.maxHp;
-    p.attackTimer = 0.2f;
-    p.isJumping = false;
-    p.isDucking = false;
-    p.actionTimer = 0.0f;
-    p.inMeleeCombat = false;
-    p.alive = true;
-    g_players.push_back(p);
 }
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
@@ -433,7 +172,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
         }
 
         if (g_hoveredLane != -1) {
-            g_laneSelected[g_hoveredLane] = !g_laneSelected[g_hoveredLane];
+            selectSingleLane(g_hoveredLane);
         }
     }
 }
@@ -518,6 +257,14 @@ int main()
     glAttachShader(g_shaderProgram, vertexShader);
     glAttachShader(g_shaderProgram, fragmentShader);
     glLinkProgram(g_shaderProgram);
+
+    int linkSuccess = 0;
+    glGetProgramiv(g_shaderProgram, GL_LINK_STATUS, &linkSuccess);
+    if (!linkSuccess) {
+        char infoLog[512];
+        glGetProgramInfoLog(g_shaderProgram, 512, nullptr, infoLog);
+        std::cerr << "Shader program link error:\n" << infoLog << std::endl;
+    }
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);

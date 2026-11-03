@@ -49,14 +49,26 @@ inline void drawDigit(int digit, glm::vec2 pos, float scale, glm::vec3 col, int 
     float w = 0.022f * scale;
     float t = 0.005f * scale;
 
-    // simple manual segment drawing for digits
-    drawPart(g_quadMesh, base, pos + glm::vec2(0.0f, w), glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
-    drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, w * 0.5f), glm::vec2(t, w * 0.5f), 0.0f, col, 0.0f, 0.0f, gray);
-    drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, w * 0.5f), glm::vec2(t, w * 0.5f), 0.0f, col, 0.0f, 0.0f, gray);
-    drawPart(g_quadMesh, base, pos, glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
-    drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, -w * 0.5f), glm::vec2(t, w * 0.5f), 0.0f, col, 0.0f, 0.0f, gray);
-    drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, -w * 0.5f), glm::vec2(t, w * 0.5f), 0.0f, col, 0.0f, 0.0f, gray);
-    drawPart(g_quadMesh, base, pos + glm::vec2(0.0f, -w), glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
+    const int seg[10][7] = {
+        { 1, 1, 1, 0, 1, 1, 1 }, // 0
+        { 0, 0, 1, 0, 0, 1, 0 }, // 1
+        { 1, 0, 1, 1, 1, 0, 1 }, // 2
+        { 1, 0, 1, 1, 0, 1, 1 }, // 3
+        { 0, 1, 1, 1, 0, 1, 0 }, // 4
+        { 1, 1, 0, 1, 0, 1, 1 }, // 5
+        { 1, 1, 0, 1, 1, 1, 1 }, // 6
+        { 1, 0, 1, 0, 0, 1, 0 }, // 7
+        { 1, 1, 1, 1, 1, 1, 1 }, // 8
+        { 1, 1, 1, 1, 0, 1, 1 }  // 9
+    };
+
+    if (seg[digit][0]) drawPart(g_quadMesh, base, pos + glm::vec2(0.0f, w), glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
+    if (seg[digit][1]) drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
+    if (seg[digit][2]) drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
+    if (seg[digit][3]) drawPart(g_quadMesh, base, pos, glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
+    if (seg[digit][4]) drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, -w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
+    if (seg[digit][5]) drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, -w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
+    if (seg[digit][6]) drawPart(g_quadMesh, base, pos + glm::vec2(0.0f, -w), glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
 }
 
 inline void drawNumber(int number, glm::vec2 pos, float scale, glm::vec3 col, int gray = 0)
