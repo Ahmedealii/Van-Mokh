@@ -605,6 +605,7 @@ int main()
                 else if (g_hoveredLane == i && g_gameState == STATE_PLAYING) highlight = 0.22f;
 
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, cy), glm::vec2(1.73f, h - 0.01f), 0.0f, laneCol, 0.0f, highlight);
+                drawLaneGrass(i, cy, h, LANE_LEFT_X, LANE_RIGHT_X, laneCol, highlight);
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]), glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));
             }
 

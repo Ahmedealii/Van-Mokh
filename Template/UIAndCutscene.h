@@ -1,11 +1,27 @@
 #pragma once
 #include "Models.h"
 #include "GameLogic.h"
+#include <algorithm>
+#include <cmath>
+#include <string>
+
+inline float smoothstep(float edge0, float edge1, float x) {
+    float t = (x - edge0) / (edge1 - edge0);
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    return t * t * (3.0f - 2.0f * t);
+}
+
+inline float lerp(float a, float b, float t) {
+    return a + t * (b - a);
+}
 
 inline void drawCollectibleCoin(glm::vec2 pos, float time)
 {
     glm::mat4 base(1.0f);
-    float pulse = 1.0f + 0.12f * std::sin(time * 6.0f);
+    float pulse = 1.0f + 0.10f * std::sin(time * 5.0f) + 0.05f * std::sin(time * 11.0f);
+    float glow = 0.5f + 0.5f * std::sin(time * 3.0f);
+    drawPart(g_circleMesh, base, pos, glm::vec2(0.035f * pulse, 0.035f * pulse), 0.0f, glm::vec3(0.9f, 0.7f, 0.0f) * glow);
     drawPart(g_circleMesh, base, pos, glm::vec2(0.028f * pulse, 0.028f * pulse), 0.0f, glm::vec3(0.98f, 0.82f, 0.12f));
     drawPart(g_circleMesh, base, pos, glm::vec2(0.020f * pulse, 0.020f * pulse), 0.0f, glm::vec3(1.00f, 0.92f, 0.40f));
     drawPart(g_quadMesh, base, pos, glm::vec2(0.008f * pulse, 0.022f * pulse), 0.0f, glm::vec3(0.85f, 0.65f, 0.05f));
@@ -19,14 +35,12 @@ inline void drawProjectile(const Projectile& p, float time)
     if (!p.fromPlayer) {
         y += p.isHigh ? 0.055f : -0.055f;
     }
-
     if (p.hitting) {
         float s = 1.0f + (0.25f - p.hitAnimTimer) * 6.0f;
         drawPart(g_circleMesh, base, glm::vec2(p.x, y), glm::vec2(0.025f * s, 0.025f * s), 0.0f, glm::vec3(1.0f, 0.85f, 0.2f));
         drawPart(g_triangleMesh, base, glm::vec2(p.x, y), glm::vec2(0.04f * s, 0.04f * s), time * 360.0f, glm::vec3(1.0f, 0.4f, 0.1f));
         return;
     }
-
     if (p.fromPlayer) {
         drawPart(g_quadMesh, base, glm::vec2(p.x, y), glm::vec2(0.045f, 0.007f), 0.0f, glm::vec3(0.65f, 0.42f, 0.18f));
         drawPart(g_triangleMesh, base, glm::vec2(p.x + 0.025f, y), glm::vec2(0.02f, 0.022f), -90.0f, glm::vec3(0.85f, 0.88f, 0.92f));
@@ -45,6 +59,59 @@ inline bool isPointInBox(glm::vec2 pt, glm::vec2 center, glm::vec2 size)
         pt.y >= center.y - size.y * 0.5f && pt.y <= center.y + size.y * 0.5f);
 }
 
+// Very simple block letters
+inline void drawLetter(char c, glm::vec2 pos, glm::vec3 col) {
+    glm::mat4 base(1.0f);
+    float w = 0.03f;
+    float h = 0.05f;
+    float t = 0.01f;
+
+    if (c == 'C') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, h/2), glm::vec2(w, t), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, -h/2), glm::vec2(w, t), 0, col);
+    } else if (c == 'o') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(w, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, h/2), glm::vec2(w, t), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, -h/2), glm::vec2(w, t), 0, col);
+    } else if (c == 'n') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(w, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, h/2), glm::vec2(w, t), 0, col);
+    } else if (c == 't') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(-w/4, h/2), glm::vec2(w/2, t), 0, col);
+    } else if (c == 'i') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+    } else if (c == 'u') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(w, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, -h/2), glm::vec2(w, t), 0, col);
+    } else if (c == 'e') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, h/2), glm::vec2(w, t), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, -h/2), glm::vec2(w, t), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(w/2, 0), glm::vec2(t, h/2), 0, col);
+    } else if (c == 'E') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(t, h), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, h/2), glm::vec2(w, t), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, -h/2), glm::vec2(w, t), 0, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(0, 0), glm::vec2(w, t), 0, col);
+    } else if (c == 'x') {
+        drawPart(g_quadMesh, base, pos + glm::vec2(-w/4, h/4), glm::vec2(w/2, t), 45.0f, col);
+        drawPart(g_quadMesh, base, pos + glm::vec2(-w/4, h/4), glm::vec2(w/2, t), -45.0f, col);
+    }
+}
+
+inline void drawText(std::string text, glm::vec2 pos, glm::vec3 col) {
+    glm::vec2 currentPos = pos;
+    for (char c : text) {
+        drawLetter(c, currentPos, col);
+        currentPos.x += 0.04f;
+    }
+}
+
 inline void drawButton(glm::vec2 center, glm::vec2 size, glm::vec3 color, int labelCode, glm::vec2 cursorNDC)
 {
     glm::mat4 base(1.0f);
@@ -53,15 +120,10 @@ inline void drawButton(glm::vec2 center, glm::vec2 size, glm::vec3 color, int la
     drawPart(g_quadMesh, base, center, size, 0.0f, color, 0.0f, hovered ? 0.35f : 0.0f);
 
     if (labelCode == 1) {
-        drawPart(g_triangleMesh, base, center, glm::vec2(0.06f, 0.06f), -90.0f, glm::vec3(0.95f, 0.95f, 0.95f));
-    }
-    else if (labelCode == 2) {
-        drawPart(g_circleMesh, base, center, glm::vec2(0.035f, 0.035f), 0.0f, glm::vec3(0.95f, 0.95f, 0.95f));
-        drawPart(g_circleMesh, base, center, glm::vec2(0.020f, 0.020f), 0.0f, color);
-    }
-    else if (labelCode == 3) {
-        drawPart(g_quadMesh, base, center, glm::vec2(0.06f, 0.014f), 45.0f, glm::vec3(0.95f, 0.95f, 0.95f));
-        drawPart(g_quadMesh, base, center, glm::vec2(0.06f, 0.014f), -45.0f, glm::vec3(0.95f, 0.95f, 0.95f));
+        drawPart(g_circleMesh, base, center, glm::vec2(0.05f, 0.05f), 0.0f, glm::vec3(1,1,1));
+    } else if (labelCode == 2) {
+        drawPart(g_quadMesh, base, center, glm::vec2(0.05f, 0.05f), 45.0f, glm::vec3(1,1,1));
+        drawPart(g_quadMesh, base, center, glm::vec2(0.05f, 0.05f), -45.0f, glm::vec3(1,1,1));
     }
 }
 
@@ -69,52 +131,59 @@ inline void renderTopBarUI(float time, int coins, bool hasEarnedExtraCoins, int 
 {
     int playerCost[3] = { 10, 20, 30 };
     glm::mat4 base(1.0f);
-    drawPart(g_quadMesh, base, glm::vec2(0.0f, 0.87f), glm::vec2(2.0f, 0.26f), 0.0f, glm::vec3(0.16f, 0.18f, 0.22f));
-
+    drawPart(g_quadMesh, base, glm::vec2(0.0f, 0.87f), glm::vec2(2.0f, 0.26f), 0.0f, glm::vec3(0.12f, 0.14f, 0.18f));
+    drawPart(g_quadMesh, base, glm::vec2(0.0f, 0.87f), glm::vec2(1.98f, 0.24f), 0.0f, glm::vec3(0.20f, 0.22f, 0.28f), 0.0f, 0.2f);
     for (int i = 0; i < 3; ++i) {
         glm::vec2 cardCenter(-0.68f + i * 0.24f, 0.87f);
         glm::vec2 cardSize(0.20f, 0.21f);
         bool unlocked = isCardUnlocked(i, coins, hasEarnedExtraCoins);
-        int gray = unlocked ? 0 : 1;
-        float highlight = (unlocked && (selectedCard == i || hoveredCard == i)) ? 0.35f : 0.0f;
 
-        drawPart(g_quadMesh, base, cardCenter, cardSize, 0.0f, glm::vec3(0.45f, 0.38f, 0.22f), 0.0f, highlight, gray);
-        drawPart(g_quadMesh, base, cardCenter, cardSize - glm::vec2(0.018f), 0.0f, glm::vec3(0.28f, 0.30f, 0.35f), 0.0f, highlight, gray);
-
-        drawPlayerModel((PlayerType)i, cardCenter + glm::vec2(0.0f, 0.02f), unlocked ? time : 0.0f, 0.0f, false, false, gray);
-
-        drawPart(g_circleMesh, base, cardCenter + glm::vec2(-0.055f, -0.068f), glm::vec2(0.016f, 0.016f), 0.0f, glm::vec3(0.98f, 0.80f, 0.15f), 0.0f, 0.0f, gray);
-        drawNumber(playerCost[i], cardCenter + glm::vec2(-0.015f, -0.068f), 0.85f, glm::vec3(1.0f, 0.95f, 0.8f), gray);
+        // FIX: Changed 'gray_val' to 'g_val' to avoid any possible keywords/conflicts
+        int g_val = unlocked ? 0 : 1;
+        float scale = 1.0f;
+        if (unlocked && (selectedCard == i || hoveredCard == i)) {
+            scale = 1.05f + 0.02f * std::sin(time * 4.0f);
+        }
+        float highlight = (unlocked && (selectedCard == i || hoveredCard == i)) ? 0.4f : 0.0f;
+        drawPart(g_quadMesh, base, cardCenter, cardSize * scale, 0.0f, glm::vec3(0.45f, 0.38f, 0.22f), 0.0f, highlight, g_val);
+        drawPart(g_quadMesh, base, cardCenter, (cardSize - glm::vec2(0.018f)) * scale, 0.0f, glm::vec3(0.28f, 0.30f, 0.35f), 0.0f, highlight, g_val);
+        drawPlayerModel((PlayerType)i, cardCenter + glm::vec2(0.0f, 0.02f), unlocked ? time : 0.0f, 0.0f, false, false, g_val);
+        drawPart(g_circleMesh, base, cardCenter + glm::vec2(-0.055f, -0.068f), glm::vec2(0.016f, 0.016f), 0.0f, glm::vec3(0.98f, 0.80f, 0.15f), 0.0f, 0.0f, g_val);
+        drawNumber(playerCost[i], cardCenter + glm::vec2(-0.015f, -0.068f), 0.85f, glm::vec3(1.0f, 0.95f, 0.8f), g_val);
     }
-
     drawPart(g_quadMesh, base, glm::vec2(0.20f, 0.87f), glm::vec2(0.18f, 0.12f), 0.0f, glm::vec3(0.25f, 0.28f, 0.35f));
     drawNumber(currentWave, glm::vec2(0.20f, 0.87f), 1.4f, glm::vec3(0.4f, 0.85f, 1.0f));
-
     drawCollectibleCoin(glm::vec2(0.58f, 0.87f), time);
-    drawNumber(coins, glm::vec2(0.66f, 0.87f), 1.8f, glm::vec3(1.0f, 0.85f, 0.15f));
+    drawNumber(coins, glm::vec2(0.66f, 0.87f), 1.8f, glm::vec3(1.0f, 0.95f, 0.8f), 0); // Hardcoded 0 here for coins
 }
 
 inline void renderCutscene(float time, float cutsceneTimer)
 {
     drawEnvironment(time);
     drawHomeBase();
-
     glm::mat4 base(1.0f);
-    drawPart(g_quadMesh, base, glm::vec2(0.08f, -0.15f), glm::vec2(1.85f, 1.40f), 0.0f, glm::vec3(0.28f, 0.58f, 0.22f));
-
-    float crystalBob = std::sin(time * 4.0f) * 0.02f;
-    drawPart(g_triangleMesh, base, glm::vec2(-0.72f, 0.05f + crystalBob), glm::vec2(0.08f, 0.12f), 0.0f, glm::vec3(0.2f, 0.85f, 1.0f));
-    drawPart(g_triangleMesh, base, glm::vec2(-0.72f, -0.07f + crystalBob), glm::vec2(0.08f, 0.12f), 180.0f, glm::vec3(0.15f, 0.65f, 0.95f));
-
-    float knightX = -0.50f + (cutsceneTimer * 0.04f < 0.25f ? cutsceneTimer * 0.04f : 0.25f);
-    float enemyX = 0.75f - (cutsceneTimer * 0.06f < 0.45f ? cutsceneTimer * 0.06f : 0.45f);
-
-    drawPlayerModel(PLAYER_MELEE, glm::vec2(knightX, 0.0f), time * 1.5f, 0.0f, (cutsceneTimer > 6.0f && cutsceneTimer < 7.0f), false);
-    drawPlayerModel(PLAYER_DEFENSE, glm::vec2(-0.60f, -0.25f), time, 0.0f, false, false);
-    drawEnemyModel(ENEMY_HARD_MELEE, glm::vec2(enemyX, 0.0f), time * 1.5f, 0.0f);
-    drawEnemyModel(ENEMY_EASY_UPPER, glm::vec2(enemyX + 0.15f, 0.20f), time * 1.5f, 0.0f);
-
+    glm::vec2 cameraOffset(0.0f, 0.0f);
     if (cutsceneTimer > 5.0f && cutsceneTimer < 9.0f) {
+        cameraOffset.x = std::sin(time * 50.0f) * 0.002f;
+        cameraOffset.y = std::cos(time * 45.0f) * 0.002f;
+    }
+    float bgAlpha = smoothstep(0.0f, 2.0f, cutsceneTimer);
+    drawPart(g_quadMesh, base, glm::vec2(0.08f, -0.15f) + cameraOffset, glm::vec2(1.85f, 1.40f), 0.0f, glm::vec3(0.28f, 0.58f, 0.22f) * bgAlpha);
+    float crystalBob = std::sin(time * 4.0f) * 0.02f;
+    drawPart(g_triangleMesh, base, glm::vec2(-0.72f, 0.05f + crystalBob) + cameraOffset, glm::vec2(0.08f, 0.12f), 0.0f, glm::vec3(0.2f, 0.85f, 1.0f));
+    drawPart(g_triangleMesh, base, glm::vec2(-0.72f, -0.07f + crystalBob) + cameraOffset, glm::vec2(0.08f, 0.12f), 180.0f, glm::vec3(0.15f, 0.65f, 0.95f));
+    float knightProg = smoothstep(0.0f, 6.0f, cutsceneTimer);
+    float knightX = lerp(-0.50f, -0.25f, knightProg);
+    float enemyProg = smoothstep(0.0f, 6.0f, cutsceneTimer);
+    float enemyX = lerp(0.75f, 0.30f, enemyProg);
+    drawPlayerModel(PLAYER_MELEE, glm::vec2(knightX, 0.0f) + cameraOffset, time * 1.5f, 0.0f, (cutsceneTimer > 6.0f && cutsceneTimer < 7.0f), false);
+    drawPlayerModel(PLAYER_DEFENSE, glm::vec2(-0.60f, -0.25f) + cameraOffset, time, 0.0f, false, false);
+    drawEnemyModel(ENEMY_HARD_MELEE, glm::vec2(enemyX, 0.0f) + cameraOffset, time * 1.5f, 0.0f);
+    drawEnemyModel(ENEMY_EASY_UPPER, glm::vec2(enemyX + 0.15f, 0.20f) + cameraOffset, time * 1.5f, 0.0f);
+    if (cutsceneTimer > 5.0f && cutsceneTimer < 9.0f) {
+        if (cutsceneTimer < 5.2f) {
+            drawPart(g_quadMesh, base, glm::vec2(0.0f, 0.0f), glm::vec2(2.0f, 2.0f), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f), 0.0f, 0.3f * (5.2f - cutsceneTimer));
+        }
         Projectile warningShot;
         warningShot.lane = 1;
         warningShot.x = enemyX - (cutsceneTimer - 5.0f) * 0.25f;
@@ -126,23 +195,22 @@ inline void renderCutscene(float time, float cutsceneTimer)
         warningShot.alive = true;
         drawProjectile(warningShot, time);
     }
-
-    drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.78f), glm::vec2(1.65f, 0.24f), 0.0f, glm::vec3(0.10f, 0.12f, 0.16f));
-    drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.78f), glm::vec2(1.61f, 0.20f), 0.0f, glm::vec3(0.18f, 0.20f, 0.26f));
-
+    drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.78f) + cameraOffset, glm::vec2(1.65f, 0.24f), 0.0f, glm::vec3(0.10f, 0.12f, 0.16f));
+    drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.78f) + cameraOffset, glm::vec2(1.61f, 0.20f), 0.0f, glm::vec3(0.18f, 0.20f, 0.26f));
     if (cutsceneTimer < 4.5f) {
-        drawEnemyModel(ENEMY_HARD_MELEE, glm::vec2(-0.68f, -0.78f), time, 0.0f);
+        drawEnemyModel(ENEMY_HARD_MELEE, glm::vec2(-0.68f, -0.78f) + cameraOffset, time, 0.0f);
         for (int i = 0; i < 8; ++i)
-            drawPart(g_quadMesh, base, glm::vec2(-0.45f + i * 0.12f, -0.76f), glm::vec2(0.09f, 0.025f), 0.0f, glm::vec3(0.95f, 0.35f, 0.35f));
+            drawPart(g_quadMesh, base, glm::vec2(-0.45f + i * 0.12f, -0.76f) + cameraOffset, glm::vec2(0.09f, 0.025f), 0.0f, glm::vec3(0.95f, 0.35f, 0.35f));
     }
     else if (cutsceneTimer < 9.5f) {
-        drawPlayerModel(PLAYER_MELEE, glm::vec2(-0.68f, -0.78f), time, 0.0f, false, false);
+        drawPlayerModel(PLAYER_MELEE, glm::vec2(-0.68f, -0.78f) + cameraOffset, time, 0.0f, false, false);
         for (int i = 0; i < 8; ++i)
-            drawPart(g_quadMesh, base, glm::vec2(-0.45f + i * 0.12f, -0.76f), glm::vec2(0.09f, 0.025f), 0.0f, glm::vec3(0.35f, 0.75f, 1.0f));
+            drawPart(g_quadMesh, base, glm::vec2(-0.45f + i * 0.12f, -0.76f) + cameraOffset, glm::vec2(0.09f, 0.025f), 0.0f, glm::vec3(0.35f, 0.75f, 1.0f));
     }
     else {
-        drawPlayerModel(PLAYER_RANGED, glm::vec2(-0.68f, -0.78f), time, 0.0f, false, false);
+        drawPlayerModel(PLAYER_RANGED, glm::vec2(-0.68f, -0.78f) + cameraOffset, time, 0.0f, false, false);
         for (int i = 0; i < 6; ++i)
-            drawPart(g_quadMesh, base, glm::vec2(-0.45f + i * 0.15f, -0.76f), glm::vec2(0.11f, 0.03f), 0.0f, glm::vec3(1.0f, 0.85f, 0.2f));
+            drawPart(g_quadMesh, base, glm::vec2(-0.45f + i * 0.15f, -0.76f) + cameraOffset, glm::vec2(0.11f, 0.03f), 0.0f, glm::vec3(1.0f, 0.85f, 0.2f));
     }
 }
+ 
