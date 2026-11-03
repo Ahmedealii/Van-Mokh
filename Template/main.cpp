@@ -76,6 +76,7 @@ int  g_coins = 30;
 bool g_hasEarnedExtraCoins = false;
 int  g_selectedCard = 0;
 int  g_hoveredCard = -1;
+bool g_isPlacingUnit = false;
 
 std::vector<PlayerUnit>  g_players;
 std::vector<EnemyUnit>   g_enemies;
@@ -122,53 +123,83 @@ void cursorPosCallback(GLFWwindow*, double xpos, double ypos)
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 {
-    if (button != GLFW_MOUSE_BUTTON_LEFT || action != GLFW_PRESS) return;
-
     if (g_gameState == STATE_MAIN_MENU) {
-        if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.15f), glm::vec2(0.45f, 0.14f))) {
-            g_cutsceneTimer = 0.0f;
-            g_gameState = STATE_CUTSCENE;
-        }
-        else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.15f), glm::vec2(0.45f, 0.14f))) {
-            glfwSetWindowShouldClose(window, true);
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.15f), glm::vec2(0.45f, 0.14f))) {
+                g_cutsceneTimer = 0.0f;
+                g_gameState = STATE_CUTSCENE;
+            }
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.15f), glm::vec2(0.45f, 0.14f))) {
+                glfwSetWindowShouldClose(window, true);
+            }
         }
         return;
     }
 
     if (g_gameState == STATE_PAUSED) {
-        if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.22f), glm::vec2(0.45f, 0.13f))) {
-            g_gameState = STATE_PLAYING;
-        }
-        else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.0f), glm::vec2(0.45f, 0.13f))) {
-            resetGame();
-            g_gameState = STATE_PLAYING;
-        }
-        else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.22f), glm::vec2(0.45f, 0.13f))) {
-            g_gameState = STATE_MAIN_MENU;
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.22f), glm::vec2(0.45f, 0.13f))) {
+                g_gameState = STATE_PLAYING;
+            }
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.0f), glm::vec2(0.45f, 0.13f))) {
+                resetGame();
+                g_gameState = STATE_PLAYING;
+            }
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.22f), glm::vec2(0.45f, 0.13f))) {
+                g_gameState = STATE_MAIN_MENU;
+            }
         }
         return;
     }
 
     if (g_gameState == STATE_WIN || g_gameState == STATE_LOSE) {
-        if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.08f), glm::vec2(0.45f, 0.14f))) {
-            resetGame();
-            g_gameState = STATE_PLAYING;
-        }
-        else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.16f), glm::vec2(0.45f, 0.14f))) {
-            g_gameState = STATE_MAIN_MENU;
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.08f), glm::vec2(0.45f, 0.14f))) {
+                resetGame();
+                g_gameState = STATE_PLAYING;
+            }
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.16f), glm::vec2(0.45f, 0.14f))) {
+                g_gameState = STATE_MAIN_MENU;
+            }
         }
         return;
     }
 
     if (g_gameState == STATE_PLAYING) {
-        if (g_hoveredCard != -1) {
-            g_selectedCard = g_hoveredCard;
-            deploySelectedUnit();
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+            if (g_isPlacingUnit) {
+                g_isPlacingUnit = false;
+            }
+            else {
+                clearAllLanes();
+            }
             return;
         }
 
-        if (g_hoveredLane != -1) {
-            toggleLaneSelection(g_hoveredLane);
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            if (g_hoveredCard != -1) {
+                if (isCardUnlocked(g_hoveredCard, g_coins, g_hasEarnedExtraCoins)) {
+                    g_selectedCard = g_hoveredCard;
+                    g_isPlacingUnit = true;
+                }
+                return;
+            }
+
+            if (g_hoveredLane != -1) {
+                if (g_isPlacingUnit) {
+                    int cost = PLAYER_COST[g_selectedCard];
+                    if (g_coins >= cost && isCardUnlocked(g_selectedCard, g_coins, g_hasEarnedExtraCoins)) {
+                        spawnPlayerInLane(g_hoveredLane, (PlayerType)g_selectedCard);
+                        g_laneSelected[g_hoveredLane] = true;
+                        g_lastSelectedLane = g_hoveredLane;
+                        g_isPlacingUnit = false;
+                    }
+                }
+                else {
+                    toggleLaneSelection(g_hoveredLane);
+                }
+                return;
+            }
         }
     }
 }
@@ -178,7 +209,13 @@ void keyCallback(GLFWwindow*, int key, int, int action, int)
     if (action != GLFW_PRESS) return;
 
     if (key == GLFW_KEY_ESCAPE) {
-        if (g_gameState == STATE_PLAYING) g_gameState = STATE_PAUSED;
+        if (g_gameState == STATE_PLAYING) {
+            if (g_isPlacingUnit) {
+                g_isPlacingUnit = false;
+                return;
+            }
+            g_gameState = STATE_PAUSED;
+        }
         else if (g_gameState == STATE_PAUSED) g_gameState = STATE_PLAYING;
         return;
     }
@@ -205,8 +242,30 @@ void keyCallback(GLFWwindow*, int key, int, int action, int)
             }
         }
     }
+    else if (key == GLFW_KEY_1) {
+        if (isCardUnlocked(0, g_coins, g_hasEarnedExtraCoins)) {
+            g_selectedCard = 0;
+            g_isPlacingUnit = true;
+        }
+    }
+    else if (key == GLFW_KEY_2) {
+        if (isCardUnlocked(1, g_coins, g_hasEarnedExtraCoins)) {
+            g_selectedCard = 1;
+            g_isPlacingUnit = true;
+        }
+    }
+    else if (key == GLFW_KEY_3) {
+        if (isCardUnlocked(2, g_coins, g_hasEarnedExtraCoins)) {
+            g_selectedCard = 2;
+            g_isPlacingUnit = true;
+        }
+    }
+    else if (key == GLFW_KEY_C) {
+        clearAllLanes();
+    }
     else if (key == GLFW_KEY_SPACE || key == GLFW_KEY_ENTER) {
         deploySelectedUnit();
+        g_isPlacingUnit = false;
     }
 }
 
@@ -340,9 +399,15 @@ int main()
                 glm::vec3 laneCol = (i % 2 == 0) ? glm::vec3(0.32f, 0.65f, 0.24f) : glm::vec3(0.27f, 0.58f, 0.20f);
 
                 float highlight = 0.0f;
-                if (i == g_lastSelectedLane && g_laneSelected[i]) highlight = 0.45f;
-                else if (g_laneSelected[i]) highlight = 0.28f;
-                else if (g_hoveredLane == i && g_gameState == STATE_PLAYING) highlight = 0.18f;
+                if (g_isPlacingUnit && g_hoveredLane == i) {
+                    highlight = 0.50f;
+                }
+                else if (g_laneSelected[i]) {
+                    highlight = (i == g_lastSelectedLane) ? 0.38f : 0.26f;
+                }
+                else if (g_hoveredLane == i && g_gameState == STATE_PLAYING) {
+                    highlight = 0.16f;
+                }
 
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, cy), glm::vec2(1.73f, h - 0.01f), 0.0f, laneCol, 0.0f, highlight);
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]), glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));

@@ -70,6 +70,7 @@ extern int  g_lastSelectedLane;
 extern int  g_coins;
 extern bool g_hasEarnedExtraCoins;
 extern int  g_selectedCard;
+extern bool g_isPlacingUnit;
 
 extern std::vector<PlayerUnit>  g_players;
 extern std::vector<EnemyUnit>   g_enemies;
@@ -137,10 +138,21 @@ inline void resetGame()
     g_coins = 30;
     g_hasEarnedExtraCoins = false;
     g_selectedCard = 0;
+    g_lastSelectedLane = -1;
+    g_isPlacingUnit = false;
     for (int i = 0; i < NUM_LANES; ++i) {
         g_laneSelected[i] = false;
     }
     startWave(1);
+}
+
+inline void clearAllLanes()
+{
+    for (int i = 0; i < NUM_LANES; ++i) {
+        g_laneSelected[i] = false;
+    }
+    g_lastSelectedLane = -1;
+    g_isPlacingUnit = false;
 }
 
 inline void toggleLaneSelection(int lane)
@@ -189,7 +201,6 @@ inline void deploySelectedUnit()
         spawnPlayerInLane(g_lastSelectedLane, (PlayerType)g_selectedCard);
     }
     else {
-        // Fallback: spawn in first active selected lane if any
         for (int i = 0; i < NUM_LANES; ++i) {
             if (g_laneSelected[i]) {
                 spawnPlayerInLane(i, (PlayerType)g_selectedCard);
@@ -310,7 +321,6 @@ inline void updateGameplay(float dt)
         EnemyUnit& e = g_enemies[i];
         if (!e.alive) continue;
 
-        // Slower enemy speeds for balanced wave progression
         float speed = (e.type == ENEMY_HARD_MELEE) ? 0.085f : 0.045f;
         if (!e.inMeleeCombat) {
             e.x -= speed * dt;
