@@ -266,9 +266,13 @@ inline void updateGameplay(float dt)
             }
         }
 
+        const float PLAYER_MAX_ADVANCE_X = 0.65f;
+
         if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
-            p.x += 0.14f * dt;
-            if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
+            if (p.x < PLAYER_MAX_ADVANCE_X) {
+                p.x += 0.14f * dt;
+                if (p.x > PLAYER_MAX_ADVANCE_X) p.x = PLAYER_MAX_ADVANCE_X;
+            }
         }
 
         p.attackTimer -= dt;
