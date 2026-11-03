@@ -204,9 +204,9 @@ inline void drawPlayerModel(PlayerType type, glm::vec2 pos, float time, float re
 inline void drawEnemyModel(EnemyType type, glm::vec2 pos, float time, float redTint)
 {
     glm::mat4 base = glm::translate(glm::mat4(1.0f), glm::vec3(pos.x, pos.y, 0.0f));
-    float walkBob = std::sin(time * 9.0f) * 14.0f;
+    float walkBob = std::sin(time * 9.0f) * 14.0f;5
 
-    if (type == ENEMY_EASY_UPPER) {
+        ;if (type == ENEMY_EASY_UPPER) {
         float hoverY = 0.035f + std::sin(time * 5.0f) * 0.015f;
         glm::mat4 flyMat = glm::translate(base, glm::vec3(0.0f, hoverY, 0.0f));
         float wingFlap = std::sin(time * 12.0f) * 22.0f;
