@@ -7,7 +7,6 @@ x64/
 x86/
 [Aa]rm/
 [Aa]rm64/
-Template/
 *.tlog
 
 # Visual Studio user specific files
