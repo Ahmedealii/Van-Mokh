@@ -271,8 +271,57 @@ inline void updateGameplay(float dt)
             }
         }
 
+        // Check for uncollected coins ahead in this lane
+        bool hasCoinAhead = false;
+        for (int j = 0; j < (int)g_collectibles.size(); ++j) {
+            const Collectible& c = g_collectibles[j];
+            if (c.alive && c.lane == p.lane && c.x >= p.x - 0.05f) {
+                hasCoinAhead = true;
+                break;
+            }
+        }
+
+        // Check for alive enemies ahead in this specific lane
+        bool hasEnemyInLane = false;
+        float nearestEnemyDist = 999.0f;
+        for (int j = 0; j < (int)g_enemies.size(); ++j) {
+            const EnemyUnit& e = g_enemies[j];
+            if (e.alive && e.lane == p.lane && e.x >= p.x - 0.05f) {
+                hasEnemyInLane = true;
+                float dist = e.x - p.x;
+                if (dist < nearestEnemyDist) {
+                    nearestEnemyDist = dist;
+                }
+            }
+        }
+
+        const float ARCHER_ATTACK_RANGE = 0.70f;
+
         if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
-            if (p.x < LANE_RIGHT_X) {
+            bool shouldAdvance = false;
+
+            if (p.type == PLAYER_MELEE) {
+                // Melee knights advance only if an enemy or dropped coin is in their lane
+                if (hasEnemyInLane || hasCoinAhead) {
+                    shouldAdvance = true;
+                }
+            }
+            else if (p.type == PLAYER_RANGED) {
+                // Archers stay completely still when shooting an enemy in range
+                if (hasEnemyInLane) {
+                    if (nearestEnemyDist > ARCHER_ATTACK_RANGE) {
+                        shouldAdvance = true;
+                    }
+                    else {
+                        shouldAdvance = false;
+                    }
+                }
+                else if (hasCoinAhead) {
+                    shouldAdvance = true;
+                }
+            }
+
+            if (shouldAdvance) {
                 p.x += 0.14f * dt;
                 if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
             }
@@ -281,17 +330,23 @@ inline void updateGameplay(float dt)
         p.attackTimer -= dt;
         if (p.attackTimer <= 0.0f) {
             if (p.type == PLAYER_RANGED) {
-                Projectile proj;
-                proj.lane = p.lane;
-                proj.x = p.x + 0.04f;
-                proj.fromPlayer = true;
-                proj.isHigh = false;
-                proj.damage = 1;
-                proj.hitting = false;
-                proj.hitAnimTimer = 0.0f;
-                proj.alive = true;
-                g_projectiles.push_back(proj);
-                p.attackTimer = 1.4f;
+                // Only fire arrows when an enemy is in this lane and within range
+                if (hasEnemyInLane && nearestEnemyDist <= ARCHER_ATTACK_RANGE) {
+                    Projectile proj;
+                    proj.lane = p.lane;
+                    proj.x = p.x + 0.04f;
+                    proj.fromPlayer = true;
+                    proj.isHigh = false;
+                    proj.damage = 1;
+                    proj.hitting = false;
+                    proj.hitAnimTimer = 0.0f;
+                    proj.alive = true;
+                    g_projectiles.push_back(proj);
+                    p.attackTimer = 1.4f;
+                }
+                else {
+                    p.attackTimer = 0.1f;
+                }
             }
             else if (p.type == PLAYER_MELEE) {
                 for (int j = 0; j < (int)g_enemies.size(); ++j) {
@@ -376,7 +431,6 @@ inline void updateGameplay(float dt)
             if (proj.hitAnimTimer <= 0.0f) proj.alive = false;
             continue;
         }
-
         proj.x += (proj.fromPlayer ? 0.55f : -0.40f) * dt;
         if (proj.x < LANE_LEFT_X || proj.x > LANE_RIGHT_X + 0.05f) {
             proj.alive = false;
