@@ -23,6 +23,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Audio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="GameLogic.h">
       <Filter>Header Files</Filter>
     </ClInclude>

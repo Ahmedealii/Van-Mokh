@@ -1,3 +1,4 @@
+#include "Audio.h"
 #pragma once
 #include <vector>
 #include <cmath>
@@ -53,7 +54,8 @@ enum GameState {
     STATE_PLAYING = 2,
     STATE_PAUSED = 3,
     STATE_WIN = 4,
-    STATE_LOSE = 5
+    STATE_LOSE = 5,
+    STATE_SOUND_SETTINGS = 6
 };
 
 const int NUM_LANES = 4;
@@ -240,6 +242,7 @@ inline void updateGameplay(float dt)
             }
             else {
                 g_gameState = STATE_WIN;
+                playAudioWin();
                 return;
             }
         }
@@ -318,6 +321,7 @@ inline void updateGameplay(float dt)
                     proj.hitAnimTimer = 0.0f;
                     proj.alive = true;
                     g_projectiles.push_back(proj);
+                    playAudioArrow();
                     p.attackTimer = 1.4f;
                 }
                 else {
@@ -351,6 +355,7 @@ inline void updateGameplay(float dt)
                 c.alive = false;
                 g_coins += c.value;
                 g_hasEarnedExtraCoins = true;
+                playAudioCoin();
             }
         }
     }
@@ -366,6 +371,7 @@ inline void updateGameplay(float dt)
 
         if (e.x <= LANE_LEFT_X) {
             g_gameState = STATE_LOSE;
+            playAudioLose();
             return;
         }
 

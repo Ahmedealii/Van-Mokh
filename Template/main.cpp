@@ -1,3 +1,4 @@
+#include "Audio.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -66,6 +67,8 @@ GLint locOverrideColor = -1;
 GLint locUseOverride = -1;
 
 GameState g_gameState = STATE_MAIN_MENU;
+int  g_audioVolume = 80;
+bool g_audioMuted  = false;
 float g_cutsceneTimer = 0.0f;
 
 bool g_laneSelected[NUM_LANES] = { false, false, false, false };
@@ -125,12 +128,50 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 {
     if (g_gameState == STATE_MAIN_MENU) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.00f), glm::vec2(0.48f, 0.135f))) {
+            // PLAY (triggers cutscene then game)
+            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.08f), glm::vec2(0.46f, 0.110f))) {
+                playAudioDeploy();
                 g_cutsceneTimer = 0.0f;
                 g_gameState = STATE_CUTSCENE;
             }
-            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.17f), glm::vec2(0.42f, 0.120f))) {
+            // SOUND SETTINGS (bonus requirement)
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.06f), glm::vec2(0.46f, 0.110f))) {
+                playAudioSelect();
+                g_gameState = STATE_SOUND_SETTINGS;
+            }
+            // EXIT (closes application)
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.20f), glm::vec2(0.46f, 0.110f))) {
                 glfwSetWindowShouldClose(window, true);
+            }
+        }
+        return;
+    }
+
+    if (g_gameState == STATE_SOUND_SETTINGS) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+            // VOL -
+            if (isPointInBox(g_cursorNDC, glm::vec2(-0.13f, -0.01f), glm::vec2(0.20f, 0.085f))) {
+                setAudioVolume(g_audioVolume - 10);
+                playAudioSelect();
+            }
+            // VOL +
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.13f, -0.01f), glm::vec2(0.20f, 0.085f))) {
+                setAudioVolume(g_audioVolume + 10);
+                playAudioSelect();
+            }
+            // MUTE / UNMUTE
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.11f), glm::vec2(0.46f, 0.085f))) {
+                toggleAudioMute();
+                playAudioSelect();
+            }
+            // TEST SFX
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.20f), glm::vec2(0.46f, 0.085f))) {
+                playAudioCoin();
+            }
+            // BACK to Main Menu
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.29f), glm::vec2(0.46f, 0.085f))) {
+                playAudioSelect();
+                g_gameState = STATE_MAIN_MENU;
             }
         }
         return;
@@ -363,6 +404,10 @@ int main()
 
     float lastFrame = static_cast<float>(glfwGetTime());
 
+    // Initialize audio system and start background music (Bonus)
+    initAudio();
+    playBGM();
+
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -379,6 +424,9 @@ int main()
 
         if (g_gameState == STATE_MAIN_MENU) {
             renderMainMenuUI(currentFrame, g_cursorNDC);
+        }
+        else if (g_gameState == STATE_SOUND_SETTINGS) {
+            renderSoundSettingsUI(currentFrame, g_cursorNDC);
         }
         else if (g_gameState == STATE_CUTSCENE) {
             renderCutscene(currentFrame, g_cutsceneTimer);
