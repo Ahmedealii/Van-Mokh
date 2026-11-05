@@ -433,7 +433,7 @@ int main()
                 float animTime = (g_gameState == STATE_PLAYING) ? currentFrame : 0.0f;
                 glm::vec2 pos(e.x, LANE_CENTER_Y[e.lane]);
                 drawEnemyModel(e.type, pos, animTime, redIntensity);
-                drawHealthBar(pos + glm::vec2(0.0f, 0.135f), e.hp, p.maxHp);
+                drawHealthBar(pos + glm::vec2(0.0f, 0.135f), e.hp, e.maxHp); // <-- Change p.maxHp to e.maxHp here
             }
 
             for (int i = 0; i < (int)g_projectiles.size(); ++i) {
