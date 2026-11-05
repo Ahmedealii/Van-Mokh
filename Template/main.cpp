@@ -113,7 +113,7 @@ void cursorPosCallback(GLFWwindow*, double xpos, double ypos)
 
     g_hoveredCard = -1;
     for (int i = 0; i < 3; ++i) {
-        glm::vec2 cardCenter(-0.68f + i * 0.24f, 0.87f);
+        glm::vec2 cardCenter(-0.68f + (float)i * 0.24f, 0.87f);
         if (isCardUnlocked(i, g_coins, g_hasEarnedExtraCoins) && isPointInBox(g_cursorNDC, cardCenter, glm::vec2(0.20f, 0.21f))) {
             g_hoveredCard = i;
             break;
@@ -125,11 +125,11 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 {
     if (g_gameState == STATE_MAIN_MENU) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.15f), glm::vec2(0.45f, 0.14f))) {
+            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.00f), glm::vec2(0.48f, 0.135f))) {
                 g_cutsceneTimer = 0.0f;
                 g_gameState = STATE_CUTSCENE;
             }
-            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.15f), glm::vec2(0.45f, 0.14f))) {
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.17f), glm::vec2(0.42f, 0.120f))) {
                 glfwSetWindowShouldClose(window, true);
             }
         }
@@ -138,14 +138,14 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 
     if (g_gameState == STATE_PAUSED) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.22f), glm::vec2(0.45f, 0.13f))) {
+            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.06f), glm::vec2(0.46f, 0.120f))) {
                 g_gameState = STATE_PLAYING;
             }
-            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.0f), glm::vec2(0.45f, 0.13f))) {
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.09f), glm::vec2(0.46f, 0.120f))) {
                 resetGame();
                 g_gameState = STATE_PLAYING;
             }
-            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.22f), glm::vec2(0.45f, 0.13f))) {
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.24f), glm::vec2(0.46f, 0.120f))) {
                 g_gameState = STATE_MAIN_MENU;
             }
         }
@@ -154,11 +154,11 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 
     if (g_gameState == STATE_WIN || g_gameState == STATE_LOSE) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.08f), glm::vec2(0.45f, 0.14f))) {
+            if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.00f), glm::vec2(0.46f, 0.130f))) {
                 resetGame();
                 g_gameState = STATE_PLAYING;
             }
-            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.16f), glm::vec2(0.45f, 0.14f))) {
+            else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.17f), glm::vec2(0.46f, 0.120f))) {
                 g_gameState = STATE_MAIN_MENU;
             }
         }
@@ -358,11 +358,12 @@ int main()
 
     float lastFrame = static_cast<float>(glfwGetTime());
 
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         float currentFrame = static_cast<float>(glfwGetTime());
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
+
+        if (deltaTime > 0.05f) deltaTime = 0.05f;
 
         glClearColor(0.12f, 0.14f, 0.20f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -371,11 +372,7 @@ int main()
         glm::mat4 base(1.0f);
 
         if (g_gameState == STATE_MAIN_MENU) {
-            drawEnvironment(currentFrame);
-            drawHomeBase();
-            drawPart(g_quadMesh, base, glm::vec2(0.0f, 0.0f), glm::vec2(0.75f, 0.75f), 0.0f, glm::vec3(0.14f, 0.16f, 0.22f));
-            drawButton(glm::vec2(0.0f, 0.15f), glm::vec2(0.45f, 0.14f), glm::vec3(0.20f, 0.65f, 0.30f), 1, g_cursorNDC);
-            drawButton(glm::vec2(0.0f, -0.15f), glm::vec2(0.45f, 0.14f), glm::vec3(0.75f, 0.22f, 0.22f), 3, g_cursorNDC);
+            renderMainMenuUI(currentFrame, g_cursorNDC);
         }
         else if (g_gameState == STATE_CUTSCENE) {
             renderCutscene(currentFrame, g_cutsceneTimer);
@@ -390,7 +387,7 @@ int main()
                 updateGameplay(deltaTime);
             }
 
-            drawEnvironment(currentFrame);
+            drawDetailedEnvironment(currentFrame);
             renderTopBarUI(currentFrame, g_coins, g_hasEarnedExtraCoins, g_selectedCard, g_hoveredCard, g_currentWave);
 
             for (int i = 0; i < NUM_LANES; ++i) {
@@ -413,7 +410,7 @@ int main()
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]), glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));
             }
 
-            drawHomeBase();
+            drawDetailedHomeBase();
 
             for (int i = 0; i < (int)g_collectibles.size(); ++i) {
                 if (g_collectibles[i].alive) drawCollectibleCoin(glm::vec2(g_collectibles[i].x, LANE_CENTER_Y[g_collectibles[i].lane] - 0.04f), currentFrame);
@@ -436,7 +433,7 @@ int main()
                 float animTime = (g_gameState == STATE_PLAYING) ? currentFrame : 0.0f;
                 glm::vec2 pos(e.x, LANE_CENTER_Y[e.lane]);
                 drawEnemyModel(e.type, pos, animTime, redIntensity);
-                drawHealthBar(pos + glm::vec2(0.0f, 0.135f), e.hp, e.maxHp);
+                drawHealthBar(pos + glm::vec2(0.0f, 0.135f), e.hp, p.maxHp);
             }
 
             for (int i = 0; i < (int)g_projectiles.size(); ++i) {
@@ -444,16 +441,10 @@ int main()
             }
 
             if (g_gameState == STATE_PAUSED) {
-                drawPart(g_quadMesh, base, glm::vec2(0.0f, 0.0f), glm::vec2(0.65f, 0.78f), 0.0f, glm::vec3(0.12f, 0.14f, 0.20f));
-                drawButton(glm::vec2(0.0f, 0.22f), glm::vec2(0.45f, 0.13f), glm::vec3(0.20f, 0.65f, 0.30f), 1, g_cursorNDC);
-                drawButton(glm::vec2(0.0f, 0.00f), glm::vec2(0.45f, 0.13f), glm::vec3(0.85f, 0.55f, 0.15f), 2, g_cursorNDC);
-                drawButton(glm::vec2(0.0f, -0.22f), glm::vec2(0.45f, 0.13f), glm::vec3(0.75f, 0.22f, 0.22f), 3, g_cursorNDC);
+                renderPauseMenuUI(currentFrame, g_cursorNDC);
             }
             else if (g_gameState == STATE_WIN || g_gameState == STATE_LOSE) {
-                glm::vec3 bannerCol = (g_gameState == STATE_WIN) ? glm::vec3(0.15f, 0.55f, 0.25f) : glm::vec3(0.60f, 0.15f, 0.15f);
-                drawPart(g_quadMesh, base, glm::vec2(0.0f, 0.0f), glm::vec2(0.70f, 0.68f), 0.0f, bannerCol);
-                drawButton(glm::vec2(0.0f, 0.08f), glm::vec2(0.45f, 0.14f), glm::vec3(0.85f, 0.55f, 0.15f), 2, g_cursorNDC);
-                drawButton(glm::vec2(0.0f, -0.16f), glm::vec2(0.45f, 0.14f), glm::vec3(0.25f, 0.30f, 0.40f), 3, g_cursorNDC);
+                renderEndMenuUI(g_gameState == STATE_WIN, currentFrame, g_cursorNDC);
             }
         }
 
