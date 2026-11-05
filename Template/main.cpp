@@ -363,7 +363,8 @@ int main()
 
     float lastFrame = static_cast<float>(glfwGetTime());
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window))
+    {
         float currentFrame = static_cast<float>(glfwGetTime());
         float deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -395,6 +396,7 @@ int main()
             drawDetailedEnvironment(currentFrame);
             renderTopBarUI(currentFrame, g_coins, g_hasEarnedExtraCoins, g_selectedCard, g_hoveredCard, g_currentWave);
 
+            // 4 Checkered Battlefield Lanes matching the Main Menu & Cutscene
             for (int i = 0; i < NUM_LANES; ++i) {
                 float cy = LANE_CENTER_Y[i];
                 float h = LANE_TOP_Y[i] - LANE_BOTTOM_Y[i];
@@ -411,8 +413,19 @@ int main()
                     highlight = 0.16f;
                 }
 
+                // Base lane strip
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, cy), glm::vec2(1.73f, h - 0.01f), 0.0f, laneCol, 0.0f, highlight);
+                // Dark bottom divider strip
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]), glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));
+
+                // 9 alternating checker tiles per lane
+                float tileW = 1.73f / 9.0f;
+                for (int c = 0; c < 9; ++c) {
+                    if ((c + i) % 2 == 1) {
+                        float tx = -0.78f + ((float)c + 0.5f) * tileW;
+                        drawPart(g_quadMesh, base, glm::vec2(tx, cy), glm::vec2(tileW - 0.006f, h - 0.016f), 0.0f, laneCol * 1.09f, 0.0f, highlight);
+                    }
+                }
             }
 
             drawDetailedHomeBase();
@@ -427,8 +440,9 @@ int main()
                 float redIntensity = (1.0f - (float)p.hp / (float)p.maxHp) * 0.85f;
                 float animTime = (g_gameState == STATE_PLAYING) ? currentFrame : 0.0f;
                 glm::vec2 pos(p.x, LANE_CENTER_Y[p.lane]);
+                float yOffset = p.isJumping ? 0.075f : (p.isDucking ? -0.035f : 0.0f);
                 drawPlayerModel(p.type, pos, animTime, redIntensity, p.isJumping, p.isDucking);
-                drawHealthBar(pos + glm::vec2(0.0f, 0.135f), p.hp, p.maxHp);
+                drawHealthBar(pos + glm::vec2(0.0f, 0.135f + yOffset), p.hp, p.maxHp);
             }
 
             for (int i = 0; i < (int)g_enemies.size(); ++i) {
@@ -438,7 +452,7 @@ int main()
                 float animTime = (g_gameState == STATE_PLAYING) ? currentFrame : 0.0f;
                 glm::vec2 pos(e.x, LANE_CENTER_Y[e.lane]);
                 drawEnemyModel(e.type, pos, animTime, redIntensity);
-                drawHealthBar(pos + glm::vec2(0.0f, 0.135f), e.hp, e.maxHp); // <-- Change p.maxHp to e.maxHp here
+                drawHealthBar(pos + glm::vec2(0.0f, 0.135f), e.hp, e.maxHp);
             }
 
             for (int i = 0; i < (int)g_projectiles.size(); ++i) {

@@ -389,7 +389,7 @@ inline void drawButton(glm::vec2 center, glm::vec2 size, glm::vec3 color, int la
     drawPart(g_quadMesh, base, center + glm::vec2(0.0f, currentSize.y * 0.5f - bevelH * 0.5f), glm::vec2(currentSize.x, bevelH), 0.0f, faceCol * 1.35f);
     drawPart(g_quadMesh, base, center - glm::vec2(0.0f, currentSize.y * 0.5f - bevelH * 0.5f), glm::vec2(currentSize.x, bevelH), 0.0f, faceCol * 0.62f);
 
-    glm::vec3 iconCol(1.0f, 1.0f, 1.0f);
+    glm::vec3 textCol(1.0f, 1.0f, 1.0f);
 
     std::string text = customLabel;
     if (text.empty()) {
@@ -404,58 +404,10 @@ inline void drawButton(glm::vec2 center, glm::vec2 size, glm::vec3 color, int la
         }
     }
 
-    float textScale = (size.y > 0.13f) ? 1.08f : ((size.y < 0.12f) ? 0.95f : 1.02f);
+    float textScale = (size.y > 0.13f) ? 1.12f : ((size.y < 0.12f) ? 0.98f : 1.05f);
 
-    if (labelCode == 1) {
-        if (text == "RESUME") {
-            // Resume: Play Triangle + "RESUME"
-            glm::vec2 iconPos = center + glm::vec2(-0.108f, 0.0f);
-            drawPart(g_triangleMesh, base, iconPos + glm::vec2(0.002f, -0.003f), glm::vec2(0.036f, 0.036f), -90.0f, glm::vec3(0.05f, 0.15f, 0.05f));
-            drawPart(g_triangleMesh, base, iconPos, glm::vec2(0.034f, 0.034f), -90.0f, iconCol);
-            drawCenteredText(text, center + glm::vec2(0.024f, 0.0f), textScale, iconCol);
-        }
-        else {
-            // Play: Play Triangle + "PLAY"
-            glm::vec2 iconPos = center + glm::vec2(-0.082f, 0.0f);
-            drawPart(g_triangleMesh, base, iconPos + glm::vec2(0.002f, -0.003f), glm::vec2(0.042f, 0.042f), -90.0f, glm::vec3(0.05f, 0.15f, 0.05f));
-            drawPart(g_triangleMesh, base, iconPos, glm::vec2(0.040f, 0.040f), -90.0f, iconCol);
-            drawCenteredText(text, center + glm::vec2(0.028f, 0.0f), textScale, iconCol);
-        }
-    }
-    else if (labelCode == 2) {
-        // Retry / Restart: Sharp Directional Loop Arrow + Centered "RETRY"
-        glm::vec2 ringPos = center + glm::vec2(-0.088f, 0.0f);
-        float rOut = 0.033f;
-        float rIn = 0.021f;
-
-        // Outer white circle
-        drawPart(g_circleMesh, base, ringPos, glm::vec2(rOut, rOut), 0.0f, iconCol);
-        // Inner cutout matching button face
-        drawPart(g_circleMesh, base, ringPos, glm::vec2(rIn, rIn), 0.0f, faceCol);
-        // Vertical gap at top-right of ring creating the open arc
-        drawPart(g_quadMesh, base, ringPos + glm::vec2(0.012f, 0.018f), glm::vec2(0.014f, 0.022f), 0.0f, faceCol);
-        // Downward arrowhead completing the clockwise loop
-        drawPart(g_triangleMesh, base, ringPos + glm::vec2(0.021f, 0.016f), glm::vec2(0.022f, 0.022f), 180.0f, iconCol);
-
-        drawCenteredText(text, center + glm::vec2(0.028f, 0.0f), textScale, iconCol);
-    }
-    else if (labelCode == 3) {
-        // Exit: Solid, Sharp White Cross (no obscuring center dot)
-        float iconOffsetX = (size.x < 0.40f) ? -0.070f : -0.082f;
-        glm::vec2 iconPos = center + glm::vec2(iconOffsetX, 0.0f);
-        float crossW = (size.y < 0.12f) ? 0.032f : 0.038f;
-        float crossT = (size.y < 0.12f) ? 0.008f : 0.009f;
-
-        // Soft shadow behind cross
-        drawPart(g_quadMesh, base, iconPos + glm::vec2(0.002f, -0.002f), glm::vec2(crossW, crossT), 45.0f, glm::vec3(0.1f, 0.05f, 0.05f));
-        drawPart(g_quadMesh, base, iconPos + glm::vec2(0.002f, -0.002f), glm::vec2(crossW, crossT), -45.0f, glm::vec3(0.1f, 0.05f, 0.05f));
-        // Main solid cross
-        drawPart(g_quadMesh, base, iconPos, glm::vec2(crossW, crossT), 45.0f, iconCol);
-        drawPart(g_quadMesh, base, iconPos, glm::vec2(crossW, crossT), -45.0f, iconCol);
-
-        float textOffsetX = (size.x < 0.40f) ? 0.022f : 0.028f;
-        drawCenteredText(text, center + glm::vec2(textOffsetX, 0.0f), textScale, iconCol);
-    }
+    // Clean, centered text with shadow (no logos/icons)
+    drawCenteredTextWithShadow(text, center, textScale, textCol, glm::vec3(0.05f, 0.06f, 0.08f));
 }
 
 // -------------------------------------------------------------------------
@@ -552,6 +504,14 @@ inline void drawModalFrame(glm::vec2 center, glm::vec2 size, glm::vec3 themeColo
 // -------------------------------------------------------------------------
 // Enhanced Castle Tower & Fortified Gateways (Self-Contained in UIAndCutscene.h)
 // -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+// Forward Declaration
+// -------------------------------------------------------------------------
+inline void drawDetailedBottomEmbankment();
+
+// -------------------------------------------------------------------------
+// Enhanced Castle Tower & Fortified Gateways (Self-Contained in UIAndCutscene.h)
+// -------------------------------------------------------------------------
 inline void drawDetailedHomeBase()
 {
     glm::mat4 base(1.0f);
@@ -634,10 +594,54 @@ inline void drawDetailedHomeBase()
     drawPart(g_quadMesh, base, glm::vec2(-0.90f, 0.825f), glm::vec2(0.006f, 0.040f), 0.0f, glm::vec3(0.95f, 0.82f, 0.25f));
     drawPart(g_circleMesh, base, glm::vec2(-0.90f, 0.845f), glm::vec2(0.012f, 0.012f), 0.0f, glm::vec3(1.0f, 0.90f, 0.35f));
     drawPart(g_triangleMesh, base, glm::vec2(-0.880f, 0.835f), glm::vec2(0.035f, 0.022f), -90.0f, glm::vec3(0.85f, 0.22f, 0.22f));
+
+    // Foreground bottom woodland embankment & trees (rendered on top of lanes)
+    drawDetailedBottomEmbankment();
 }
 
 // -------------------------------------------------------------------------
-// Enhanced Castle Wall & Bottom Woodland Embankment (Self-Contained in UIAndCutscene.h)
+// Foreground Bottom Woodland Embankment, Mossy Boulders & Pine Trees
+// Rendered on top of the lane layer along the bottom perimeter (no sticks)
+// -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+// Foreground Bottom Woodland Embankment, Natural Boulders & Pine Trees
+// Scaled exactly to the width of the battlefield lanes (-0.78f to +0.95f)
+// -------------------------------------------------------------------------
+inline void drawDetailedBottomEmbankment()
+{
+    glm::mat4 base(1.0f);
+
+    // 1. Embankment strip scaled exactly to match lanes (center X = 0.085f, width = 1.73f)
+    drawPart(g_quadMesh, base, glm::vec2(0.085f, -0.925f), glm::vec2(1.73f, 0.150f), 0.0f, glm::vec3(0.14f, 0.16f, 0.20f));
+    drawPart(g_quadMesh, base, glm::vec2(0.085f, -0.850f), glm::vec2(1.73f, 0.006f), 0.0f, glm::vec3(0.18f, 0.20f, 0.25f));
+
+    // 2. Natural gray cobblestones along the embankment (no green spots)
+    for (int c = 0; c < 16; ++c) {
+        float cx = -0.72f + (float)c * 0.108f;
+        float cy = -0.940f + ((c % 3) == 0 ? 0.012f : -0.008f);
+        drawPart(g_circleMesh, base, glm::vec2(cx, cy), glm::vec2(0.030f, 0.018f), 0.0f, glm::vec3(0.28f, 0.30f, 0.35f));
+        drawPart(g_circleMesh, base, glm::vec2(cx - 0.004f, cy + 0.003f), glm::vec2(0.022f, 0.012f), 0.0f, glm::vec3(0.42f, 0.44f, 0.50f));
+    }
+
+    // 3. Multi-Tiered Dense Pine Trees & Natural Gray River Rocks
+    // Positioned strictly within the lane span with no green circles on stones
+    for (int i = 0; i < 7; ++i) {
+        float tx = -0.68f + (float)i * 0.250f;
+        // Tree trunk
+        drawPart(g_quadMesh, base, glm::vec2(tx, -0.920f), glm::vec2(0.012f, 0.055f), 0.0f, glm::vec3(0.38f, 0.22f, 0.10f));
+        // Tree foliage layers overlapping in front of bottom lane (-0.85f)
+        drawPart(g_triangleMesh, base, glm::vec2(tx, -0.890f), glm::vec2(0.082f, 0.065f), 0.0f, glm::vec3(0.12f, 0.38f, 0.16f));
+        drawPart(g_triangleMesh, base, glm::vec2(tx, -0.860f), glm::vec2(0.068f, 0.058f), 0.0f, glm::vec3(0.18f, 0.48f, 0.22f));
+        drawPart(g_triangleMesh, base, glm::vec2(tx, -0.830f), glm::vec2(0.050f, 0.050f), 0.0f, glm::vec3(0.24f, 0.58f, 0.28f));
+
+        // Natural smooth stone boulders (pure rock/granite tones, zero green circles)
+        drawPart(g_circleMesh, base, glm::vec2(tx + 0.065f, -0.925f), glm::vec2(0.044f, 0.028f), 0.0f, glm::vec3(0.32f, 0.34f, 0.38f));
+        drawPart(g_circleMesh, base, glm::vec2(tx + 0.070f, -0.920f), glm::vec2(0.032f, 0.020f), 0.0f, glm::vec3(0.46f, 0.48f, 0.54f));
+        drawPart(g_circleMesh, base, glm::vec2(tx + 0.062f, -0.914f), glm::vec2(0.018f, 0.010f), 0.0f, glm::vec3(0.58f, 0.60f, 0.66f));
+    }
+}
+// -------------------------------------------------------------------------
+// Enhanced Castle Wall Background (Self-Contained in UIAndCutscene.h)
 // -------------------------------------------------------------------------
 inline void drawDetailedEnvironment(float time)
 {
@@ -671,40 +675,7 @@ inline void drawDetailedEnvironment(float time)
         drawPart(g_triangleMesh, base, glm::vec2(fx, 0.63f), glm::vec2(0.032f, 0.045f), flicker, glm::vec3(1.0f, 0.45f, 0.05f));
         drawPart(g_triangleMesh, base, glm::vec2(fx, 0.625f), glm::vec2(0.018f, 0.028f), -flicker, glm::vec3(1.0f, 0.90f, 0.20f));
     }
-
-    // Detailed Bottom Perimeter Embankment, Fortifications, & Woodland
-    drawPart(g_quadMesh, base, glm::vec2(0.085f, -0.925f), glm::vec2(1.85f, 0.150f), 0.0f, glm::vec3(0.14f, 0.16f, 0.20f));
-    drawPart(g_quadMesh, base, glm::vec2(0.085f, -0.855f), glm::vec2(1.85f, 0.012f), 0.0f, glm::vec3(0.22f, 0.48f, 0.16f));
-
-    // Cobblestones along the embankment
-    for (int c = 0; c < 18; ++c) {
-        float cx = -0.76f + (float)c * 0.098f;
-        float cy = -0.940f + ((c % 3) == 0 ? 0.015f : -0.010f);
-        drawPart(g_circleMesh, base, glm::vec2(cx, cy), glm::vec2(0.032f, 0.020f), 0.0f, glm::vec3(0.28f, 0.30f, 0.36f));
-        drawPart(g_circleMesh, base, glm::vec2(cx - 0.005f, cy + 0.004f), glm::vec2(0.024f, 0.014f), 0.0f, glm::vec3(0.40f, 0.42f, 0.48f));
-    }
-
-    // Wooden Defense Stakes (Fortress Palisade)
-    for (int p = 0; p < 9; ++p) {
-        float px = -0.70f + (float)p * 0.195f;
-        drawPart(g_quadMesh, base, glm::vec2(px, -0.910f), glm::vec2(0.008f, 0.055f), 15.0f, glm::vec3(0.48f, 0.32f, 0.16f));
-        drawPart(g_triangleMesh, base, glm::vec2(px + 0.008f, -0.875f), glm::vec2(0.014f, 0.024f), 15.0f, glm::vec3(0.65f, 0.45f, 0.22f));
-    }
-
-    // Multi-Tiered Dense Pine Trees with Wood Trunks & Mossy Boulders
-    for (int i = 0; i < 7; ++i) {
-        float tx = -0.65f + (float)i * 0.255f;
-        drawPart(g_quadMesh, base, glm::vec2(tx, -0.930f), glm::vec2(0.012f, 0.045f), 0.0f, glm::vec3(0.38f, 0.22f, 0.10f));
-        drawPart(g_triangleMesh, base, glm::vec2(tx, -0.905f), glm::vec2(0.082f, 0.065f), 0.0f, glm::vec3(0.12f, 0.38f, 0.16f));
-        drawPart(g_triangleMesh, base, glm::vec2(tx, -0.875f), glm::vec2(0.068f, 0.058f), 0.0f, glm::vec3(0.18f, 0.48f, 0.22f));
-        drawPart(g_triangleMesh, base, glm::vec2(tx, -0.845f), glm::vec2(0.050f, 0.050f), 0.0f, glm::vec3(0.24f, 0.58f, 0.28f));
-
-        drawPart(g_circleMesh, base, glm::vec2(tx + 0.085f, -0.935f), glm::vec2(0.048f, 0.032f), 0.0f, glm::vec3(0.35f, 0.38f, 0.42f));
-        drawPart(g_circleMesh, base, glm::vec2(tx + 0.092f, -0.930f), glm::vec2(0.034f, 0.022f), 0.0f, glm::vec3(0.48f, 0.50f, 0.55f));
-        drawPart(g_circleMesh, base, glm::vec2(tx + 0.080f, -0.922f), glm::vec2(0.022f, 0.014f), 0.0f, glm::vec3(0.25f, 0.52f, 0.20f));
-    }
 }
-
 // -------------------------------------------------------------------------
 // Procedural Battlefield Lanes Renderer
 // -------------------------------------------------------------------------
@@ -876,6 +847,9 @@ inline void renderTopBarUI(float time, int coins, bool hasEarnedExtraCoins, int 
 // -------------------------------------------------------------------------
 // Opening Cutscene Sequencing (14.0 Seconds Total Cinematic Timeline)
 // -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
+// Opening Cutscene Sequencing (14.0 Seconds Total Cinematic Timeline)
+// -------------------------------------------------------------------------
 inline void renderCutscene(float time, float cutsceneTimer)
 {
     glm::mat4 base(1.0f);
@@ -888,21 +862,12 @@ inline void renderCutscene(float time, float cutsceneTimer)
         cameraOffset.y = std::cos(time * 50.0f) * shakeIntensity;
     }
 
-    // 1. Castle environment, green battlefield lanes, and home base tower
+    // 1. Castle environment, checkered battlefield lanes, and home base tower
     drawDetailedEnvironment(time);
     drawBattlefieldLanes();
     drawDetailedHomeBase();
 
-    // 2. Castle Spire Power Crystal
-    // Draw the exact same 4 striped lanes as active gameplay for visual continuity
-    for (int i = 0; i < NUM_LANES; ++i) {
-        float cy = LANE_CENTER_Y[i];
-        float h = LANE_TOP_Y[i] - LANE_BOTTOM_Y[i];
-        glm::vec3 laneCol = (i % 2 == 0) ? glm::vec3(0.32f, 0.65f, 0.24f) : glm::vec3(0.27f, 0.58f, 0.20f);
-        drawPart(g_quadMesh, base, glm::vec2(0.085f, cy) + cameraOffset, glm::vec2(1.73f, h - 0.01f), 0.0f, laneCol);
-        drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]) + cameraOffset, glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));
-    }
-    // 3. Units & Choreography across lanes
+    // 2. Units & Choreography across lanes
     // --- ENEMY WARBAND (Right Side) ---
     float enemyProg = smoothstep(0.0f, 4.2f, cutsceneTimer);
     float warlordX = lerp(0.95f, 0.28f, enemyProg);
@@ -934,7 +899,7 @@ inline void renderCutscene(float time, float cutsceneTimer)
         drawPlayerModel(PLAYER_RANGED, glm::vec2(archerX, LANE_CENTER_Y[0]) + cameraOffset, time * 1.2f, 0.0f, false, false);
     }
 
-    // 4. Combat Action & Projectile Clashes
+    // 3. Combat Action & Projectile Clashes
     // Act 2: Warlord's fireball fired at 4.8s across Lane 1
     if (cutsceneTimer > 4.8f && cutsceneTimer < 8.0f) {
         if (cutsceneTimer < 5.15f) {
@@ -964,7 +929,6 @@ inline void renderCutscene(float time, float cutsceneTimer)
     if (cutsceneTimer > 9.8f && cutsceneTimer < 13.5f) {
         float archerX = -0.42f;
 
-        // Volley Arrow 1 across Lane 0 targeting gargoyle
         if (cutsceneTimer < 11.2f) {
             Projectile arrow1;
             arrow1.lane = 0;
@@ -982,7 +946,6 @@ inline void renderCutscene(float time, float cutsceneTimer)
             drawProjectile(arrow1, time);
         }
 
-        // Volley Arrow 2 across Lane 0 fired directly from Ranger Lyra's bow
         if (cutsceneTimer > 11.0f) {
             Projectile arrow2;
             arrow2.lane = 0;
@@ -997,7 +960,7 @@ inline void renderCutscene(float time, float cutsceneTimer)
         }
     }
 
-    // 5. Cinematic Dialogue Box (Bottom NDC)
+    // 4. Cinematic Dialogue Box (Bottom NDC)
     glm::vec2 boxCenter = glm::vec2(0.0f, -0.77f) + cameraOffset;
     glm::vec2 boxSize(1.72f, 0.23f);
 
