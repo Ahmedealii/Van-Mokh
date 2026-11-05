@@ -189,7 +189,7 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
                 if (g_isPlacingUnit) {
                     int cost = PLAYER_COST[g_selectedCard];
                     if (g_coins >= cost && isCardUnlocked(g_selectedCard, g_coins, g_hasEarnedExtraCoins)) {
-                        spawnPlayerInLane(g_hoveredLane, (PlayerType)g_selectedCard);
+                        spawnPlayerInLane(g_hoveredLane, (PlayerType)g_selectedCard, g_cursorNDC.x);
                         g_laneSelected[g_hoveredLane] = true;
                         g_lastSelectedLane = g_hoveredLane;
                         g_isPlacingUnit = false;

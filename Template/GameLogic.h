@@ -173,7 +173,7 @@ inline void toggleLaneSelection(int lane)
     }
 }
 
-inline void spawnPlayerInLane(int lane, PlayerType type)
+inline void spawnPlayerInLane(int lane, PlayerType type, float placementX = -0.35f)
 {
     int cost = PLAYER_COST[(int)type];
     if (!isCardUnlocked((int)type, g_coins, g_hasEarnedExtraCoins) || g_coins < cost) return;
@@ -183,7 +183,12 @@ inline void spawnPlayerInLane(int lane, PlayerType type)
     PlayerUnit p;
     p.type = type;
     p.lane = lane;
-    p.x = (type == PLAYER_DEFENSE) ? -0.35f : LANE_LEFT_X + 0.04f;
+    p.x = LANE_LEFT_X + 0.04f;
+    if (type == PLAYER_DEFENSE) {
+        p.x = placementX;
+        if (p.x < LANE_LEFT_X) p.x = LANE_LEFT_X;
+        if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
+    }
     p.maxHp = (type == PLAYER_DEFENSE) ? 7 : 5;
     p.hp = p.maxHp;
     p.attackTimer = 0.2f;
@@ -266,12 +271,10 @@ inline void updateGameplay(float dt)
             }
         }
 
-        const float PLAYER_MAX_ADVANCE_X = 0.65f;
-
         if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
-            if (p.x < PLAYER_MAX_ADVANCE_X) {
+            if (p.x < LANE_RIGHT_X) {
                 p.x += 0.14f * dt;
-                if (p.x > PLAYER_MAX_ADVANCE_X) p.x = PLAYER_MAX_ADVANCE_X;
+                if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
             }
         }
 
