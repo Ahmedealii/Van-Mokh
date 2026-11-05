@@ -14,6 +14,7 @@ struct PlayerUnit {
     bool  isJumping;
     bool  isDucking;
     float actionTimer;
+    float jumpElapsed;
     bool  inMeleeCombat;
     bool  alive;
 };
@@ -63,9 +64,11 @@ const float LANE_CENTER_Y[NUM_LANES] = { 0.375f, 0.025f, -0.325f, -0.675f };
 const float LANE_LEFT_X = -0.78f;
 const float LANE_RIGHT_X = 0.95f;
 const int PLAYER_COST[3] = { 10, 20, 30 };
+const float JUMP_DURATION = 0.65f;
 
 extern GameState g_gameState;
 extern bool g_laneSelected[NUM_LANES];
+extern float g_lanePlacementX[NUM_LANES];
 extern int  g_lastSelectedLane;
 extern int  g_coins;
 extern bool g_hasEarnedExtraCoins;
@@ -142,6 +145,7 @@ inline void resetGame()
     g_isPlacingUnit = false;
     for (int i = 0; i < NUM_LANES; ++i) {
         g_laneSelected[i] = false;
+        g_lanePlacementX[i] = -0.35f;
     }
     startWave(1);
 }
@@ -175,6 +179,8 @@ inline void toggleLaneSelection(int lane)
 
 inline void spawnPlayerInLane(int lane, PlayerType type, float placementX = -0.35f)
 {
+    if (lane < 0 || lane >= NUM_LANES || !g_laneSelected[lane]) return;
+
     int cost = PLAYER_COST[(int)type];
     if (!isCardUnlocked((int)type, g_coins, g_hasEarnedExtraCoins) || g_coins < cost) return;
 
@@ -195,6 +201,7 @@ inline void spawnPlayerInLane(int lane, PlayerType type, float placementX = -0.3
     p.isJumping = false;
     p.isDucking = false;
     p.actionTimer = 0.0f;
+    p.jumpElapsed = 0.0f;
     p.inMeleeCombat = false;
     p.alive = true;
     g_players.push_back(p);
@@ -203,12 +210,12 @@ inline void spawnPlayerInLane(int lane, PlayerType type, float placementX = -0.3
 inline void deploySelectedUnit()
 {
     if (g_lastSelectedLane >= 0 && g_lastSelectedLane < NUM_LANES && g_laneSelected[g_lastSelectedLane]) {
-        spawnPlayerInLane(g_lastSelectedLane, (PlayerType)g_selectedCard);
+        spawnPlayerInLane(g_lastSelectedLane, (PlayerType)g_selectedCard, g_lanePlacementX[g_lastSelectedLane]);
     }
     else {
         for (int i = 0; i < NUM_LANES; ++i) {
             if (g_laneSelected[i]) {
-                spawnPlayerInLane(i, (PlayerType)g_selectedCard);
+                spawnPlayerInLane(i, (PlayerType)g_selectedCard, g_lanePlacementX[i]);
                 g_lastSelectedLane = i;
                 break;
             }
@@ -265,20 +272,11 @@ inline void updateGameplay(float dt)
         if (!p.alive) continue;
 
         if (p.isJumping || p.isDucking) {
+            if (p.isJumping) p.jumpElapsed += dt;
             p.actionTimer -= dt;
             if (p.actionTimer <= 0.0f) {
                 p.isJumping = false;
                 p.isDucking = false;
-            }
-        }
-
-        // Check for uncollected coins ahead in this specific lane
-        bool hasCoinAhead = false;
-        for (int j = 0; j < (int)g_collectibles.size(); ++j) {
-            const Collectible& c = g_collectibles[j];
-            if (c.alive && c.lane == p.lane && c.x >= p.x - 0.05f) {
-                hasCoinAhead = true;
-                break;
             }
         }
 
@@ -292,15 +290,11 @@ inline void updateGameplay(float dt)
             }
         }
 
-        // Both Melee and Ranged troops advance toward enemies or dropped coins in their lane.
-        // Once in physical collision with an enemy (inMeleeCombat), movement stops automatically.
+        // Melee and ranged troops keep advancing, even when their lane is empty.
+        // Physical contact with an enemy still stops movement for combat.
         if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
-            bool shouldAdvance = (hasEnemyInLane || hasCoinAhead);
-
-            if (shouldAdvance) {
-                p.x += 0.14f * dt;
-                if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
-            }
+            p.x += 0.14f * dt;
+            if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
         }
 
         p.attackTimer -= dt;

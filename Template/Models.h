@@ -171,50 +171,82 @@ inline void drawEnvironment(float time)
     }
 }
 
-inline void drawPlayerModel(PlayerType type, glm::vec2 pos, float time, float redTint, bool jumping, bool ducking, int gray = 0)
+inline void drawPlayerModel(PlayerType type, glm::vec2 pos, float time, float redTint, bool jumping, bool ducking, int gray = 0, bool inMeleeCombat = false, float jumpHeight = 0.075f)
 {
-    float yOffset = jumping ? 0.075f : (ducking ? -0.035f : 0.0f);
+    float yOffset = jumping ? jumpHeight : (ducking ? -0.035f : 0.0f);
     float yScale = ducking ? 0.62f : 1.0f;
 
     glm::mat4 base = glm::translate(glm::mat4(1.0f), glm::vec3(pos.x, pos.y + yOffset, 0.0f));
     base = glm::scale(base, glm::vec3(1.0f, yScale, 1.0f));
 
-    float walkBob = (type == PLAYER_DEFENSE) ? 0.0f : std::sin(time * 8.0f) * 12.0f;
+    // Plant the feet during enemy contact while keeping weapon animations active.
+    float walkBob = (type == PLAYER_DEFENSE || inMeleeCombat) ? 0.0f : std::sin(time * 8.0f) * 12.0f;
 
     if (type == PLAYER_MELEE) {
-        drawPart(g_quadMesh, base, glm::vec2(-0.015f, -0.07f), glm::vec2(0.015f, 0.05f), walkBob, glm::vec3(0.3f, 0.3f, 0.35f), redTint, 0.0f, gray);
-        drawPart(g_quadMesh, base, glm::vec2(0.015f, -0.07f), glm::vec2(0.015f, 0.05f), -walkBob, glm::vec3(0.3f, 0.3f, 0.35f), redTint, 0.0f, gray);
+        // A short cape sits behind the armor.
+        drawPart(g_triangleMesh, base, glm::vec2(-0.025f, -0.015f), glm::vec2(0.065f, 0.095f), 165.0f, glm::vec3(0.12f, 0.25f, 0.55f), redTint, 0.0f, gray);
+        if (!ducking) {
+            drawPart(g_quadMesh, base, glm::vec2(-0.015f, -0.07f), glm::vec2(0.015f, 0.05f), walkBob, glm::vec3(0.3f, 0.3f, 0.35f), redTint, 0.0f, gray);
+            drawPart(g_quadMesh, base, glm::vec2(0.015f, -0.07f), glm::vec2(0.015f, 0.05f), -walkBob, glm::vec3(0.3f, 0.3f, 0.35f), redTint, 0.0f, gray);
+        }
         drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.01f), glm::vec2(0.055f, 0.08f), 0.0f, glm::vec3(0.18f, 0.45f, 0.88f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.01f), glm::vec2(0.02f, 0.07f), 0.0f, glm::vec3(0.85f, 0.85f, 0.90f), redTint, 0.0f, gray);
         drawPart(g_circleMesh, base, glm::vec2(0.0f, 0.055f), glm::vec2(0.032f, 0.032f), 0.0f, glm::vec3(0.75f, 0.78f, 0.82f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.012f, 0.055f), glm::vec2(0.02f, 0.008f), 0.0f, glm::vec3(0.15f, 0.15f, 0.2f), redTint, 0.0f, gray);
         drawPart(g_triangleMesh, base, glm::vec2(-0.01f, 0.095f), glm::vec2(0.03f, 0.035f), 15.0f, glm::vec3(0.95f, 0.80f, 0.15f), redTint, 0.0f, gray);
+        // Shoulder plates, belt, and a small round shield.
+        drawPart(g_circleMesh, base, glm::vec2(-0.025f, 0.02f), glm::vec2(0.017f, 0.013f), 0.0f, glm::vec3(0.68f, 0.74f, 0.84f), redTint, 0.0f, gray);
+        drawPart(g_circleMesh, base, glm::vec2(0.025f, 0.02f), glm::vec2(0.017f, 0.013f), 0.0f, glm::vec3(0.82f, 0.87f, 0.94f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.035f), glm::vec2(0.055f, 0.01f), 0.0f, glm::vec3(0.30f, 0.20f, 0.13f), redTint, 0.0f, gray);
+        drawPart(g_circleMesh, base, glm::vec2(-0.035f, -0.015f), glm::vec2(0.026f, 0.032f), 0.0f, glm::vec3(0.90f, 0.74f, 0.25f), redTint, 0.0f, gray);
+        drawPart(g_circleMesh, base, glm::vec2(-0.035f, -0.015f), glm::vec2(0.020f, 0.026f), 0.0f, glm::vec3(0.18f, 0.39f, 0.72f), redTint, 0.0f, gray);
+        drawPart(g_circleMesh, base, glm::vec2(-0.035f, -0.015f), glm::vec2(0.007f, 0.007f), 0.0f, glm::vec3(0.92f, 0.81f, 0.42f), redTint, 0.0f, gray);
 
         float swingAngle = -35.0f + std::sin(time * 9.0f) * 40.0f;
         glm::mat4 handMat = glm::translate(base, glm::vec3(0.025f, 0.0f, 0.0f));
         handMat = glm::rotate(handMat, glm::radians(swingAngle), glm::vec3(0.0f, 0.0f, 1.0f));
         drawPart(g_quadMesh, handMat, glm::vec2(0.035f, 0.0f), glm::vec2(0.07f, 0.014f), 0.0f, glm::vec3(0.88f, 0.90f, 0.95f), redTint, 0.0f, gray);
+        drawPart(g_triangleMesh, handMat, glm::vec2(0.077f, 0.0f), glm::vec2(0.014f, 0.018f), -90.0f, glm::vec3(0.88f, 0.90f, 0.95f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, handMat, glm::vec2(0.005f, 0.0f), glm::vec2(0.012f, 0.038f), 0.0f, glm::vec3(0.90f, 0.75f, 0.15f), redTint, 0.0f, gray);
     }
     else if (type == PLAYER_RANGED) {
-        drawPart(g_quadMesh, base, glm::vec2(-0.015f, -0.07f), glm::vec2(0.014f, 0.05f), walkBob, glm::vec3(0.40f, 0.25f, 0.12f), redTint, 0.0f, gray);
-        drawPart(g_quadMesh, base, glm::vec2(0.015f, -0.07f), glm::vec2(0.014f, 0.05f), -walkBob, glm::vec3(0.40f, 0.25f, 0.12f), redTint, 0.0f, gray);
+        if (!ducking) {
+            drawPart(g_quadMesh, base, glm::vec2(-0.015f, -0.07f), glm::vec2(0.014f, 0.05f), walkBob, glm::vec3(0.40f, 0.25f, 0.12f), redTint, 0.0f, gray);
+            drawPart(g_quadMesh, base, glm::vec2(0.015f, -0.07f), glm::vec2(0.014f, 0.05f), -walkBob, glm::vec3(0.40f, 0.25f, 0.12f), redTint, 0.0f, gray);
+        }
         drawPart(g_quadMesh, base, glm::vec2(-0.03f, 0.01f), glm::vec2(0.02f, 0.06f), 20.0f, glm::vec3(0.55f, 0.35f, 0.15f), redTint, 0.0f, gray);
         drawPart(g_triangleMesh, base, glm::vec2(0.0f, -0.005f), glm::vec2(0.065f, 0.09f), 0.0f, glm::vec3(0.15f, 0.72f, 0.55f), redTint, 0.0f, gray);
         drawPart(g_circleMesh, base, glm::vec2(0.0f, 0.055f), glm::vec2(0.028f, 0.028f), 0.0f, glm::vec3(0.95f, 0.78f, 0.62f), redTint, 0.0f, gray);
         drawPart(g_triangleMesh, base, glm::vec2(-0.005f, 0.075f), glm::vec2(0.065f, 0.045f), 10.0f, glm::vec3(0.10f, 0.55f, 0.42f), redTint, 0.0f, gray);
+        // Simple leather gear and a visible eye make the archer easier to read.
+        drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.03f), glm::vec2(0.046f, 0.01f), 0.0f, glm::vec3(0.38f, 0.23f, 0.12f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(-0.005f, 0.005f), glm::vec2(0.009f, 0.055f), -25.0f, glm::vec3(0.55f, 0.36f, 0.18f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(0.0f, -0.03f), glm::vec2(0.012f, 0.012f), 0.0f, glm::vec3(0.94f, 0.77f, 0.30f), redTint, 0.0f, gray);
+        drawPart(g_circleMesh, base, glm::vec2(0.013f, 0.057f), glm::vec2(0.004f, 0.005f), 0.0f, glm::vec3(0.12f, 0.16f, 0.18f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(0.022f, 0.005f), glm::vec2(0.032f, 0.013f), -8.0f, glm::vec3(0.95f, 0.78f, 0.62f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.04f, 0.025f), glm::vec2(0.01f, 0.055f), 25.0f, glm::vec3(0.65f, 0.40f, 0.15f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.04f, -0.025f), glm::vec2(0.01f, 0.055f), -25.0f, glm::vec3(0.65f, 0.40f, 0.15f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.028f, 0.0f), glm::vec2(0.004f, 0.095f), 0.0f, glm::vec3(0.90f, 0.90f, 0.90f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(0.044f, 0.0f), glm::vec2(0.055f, 0.004f), 0.0f, glm::vec3(0.86f, 0.73f, 0.46f), redTint, 0.0f, gray);
+        drawPart(g_triangleMesh, base, glm::vec2(0.077f, 0.0f), glm::vec2(0.012f, 0.015f), -90.0f, glm::vec3(0.78f, 0.83f, 0.87f), redTint, 0.0f, gray);
     }
     else if (type == PLAYER_DEFENSE) {
-        drawPart(g_quadMesh, base, glm::vec2(-0.02f, -0.07f), glm::vec2(0.022f, 0.05f), 0.0f, glm::vec3(0.28f, 0.30f, 0.35f), redTint, 0.0f, gray);
-        drawPart(g_quadMesh, base, glm::vec2(0.01f, -0.07f), glm::vec2(0.022f, 0.05f), 0.0f, glm::vec3(0.28f, 0.30f, 0.35f), redTint, 0.0f, gray);
+        if (!ducking) {
+            drawPart(g_quadMesh, base, glm::vec2(-0.02f, -0.07f), glm::vec2(0.022f, 0.05f), 0.0f, glm::vec3(0.28f, 0.30f, 0.35f), redTint, 0.0f, gray);
+            drawPart(g_quadMesh, base, glm::vec2(0.01f, -0.07f), glm::vec2(0.022f, 0.05f), 0.0f, glm::vec3(0.28f, 0.30f, 0.35f), redTint, 0.0f, gray);
+        }
         drawPart(g_quadMesh, base, glm::vec2(-0.005f, -0.005f), glm::vec2(0.07f, 0.09f), 0.0f, glm::vec3(0.50f, 0.54f, 0.62f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(-0.005f, 0.06f), glm::vec2(0.05f, 0.05f), 0.0f, glm::vec3(0.65f, 0.68f, 0.75f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.005f, 0.06f), glm::vec2(0.03f, 0.01f), 0.0f, glm::vec3(0.1f, 0.1f, 0.1f), redTint, 0.0f, gray);
+        // Broad shoulder plates and a helmet ridge give the defender a heavier silhouette.
+        drawPart(g_quadMesh, base, glm::vec2(-0.033f, 0.022f), glm::vec2(0.03f, 0.025f), 12.0f, glm::vec3(0.70f, 0.75f, 0.83f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(0.025f, 0.022f), glm::vec2(0.03f, 0.025f), -12.0f, glm::vec3(0.70f, 0.75f, 0.83f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(-0.005f, 0.077f), glm::vec2(0.008f, 0.035f), 0.0f, glm::vec3(0.91f, 0.77f, 0.32f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(-0.005f, -0.035f), glm::vec2(0.068f, 0.012f), 0.0f, glm::vec3(0.27f, 0.30f, 0.37f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.042f, -0.005f), glm::vec2(0.038f, 0.145f), 0.0f, glm::vec3(0.88f, 0.72f, 0.15f), redTint, 0.0f, gray);
         drawPart(g_quadMesh, base, glm::vec2(0.042f, -0.005f), glm::vec2(0.024f, 0.125f), 0.0f, glm::vec3(0.15f, 0.38f, 0.82f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(0.042f, -0.005f), glm::vec2(0.006f, 0.115f), 0.0f, glm::vec3(0.80f, 0.87f, 0.97f), redTint, 0.0f, gray);
+        drawPart(g_quadMesh, base, glm::vec2(0.042f, 0.018f), glm::vec2(0.026f, 0.007f), 0.0f, glm::vec3(0.80f, 0.87f, 0.97f), redTint, 0.0f, gray);
         drawPart(g_circleMesh, base, glm::vec2(0.042f, -0.005f), glm::vec2(0.015f, 0.015f), 0.0f, glm::vec3(0.95f, 0.85f, 0.25f), redTint, 0.0f, gray);
     }
 }

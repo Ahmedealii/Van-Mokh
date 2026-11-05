@@ -69,6 +69,7 @@ GameState g_gameState = STATE_MAIN_MENU;
 float g_cutsceneTimer = 0.0f;
 
 bool g_laneSelected[NUM_LANES] = { false, false, false, false };
+float g_lanePlacementX[NUM_LANES] = { -0.35f, -0.35f, -0.35f, -0.35f };
 int  g_hoveredLane = -1;
 int  g_lastSelectedLane = -1;
 
@@ -180,23 +181,16 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
             if (g_hoveredCard != -1) {
                 if (isCardUnlocked(g_hoveredCard, g_coins, g_hasEarnedExtraCoins)) {
                     g_selectedCard = g_hoveredCard;
-                    g_isPlacingUnit = true;
+                    deploySelectedUnit();
+                    g_isPlacingUnit = false;
                 }
                 return;
             }
 
             if (g_hoveredLane != -1) {
-                if (g_isPlacingUnit) {
-                    int cost = PLAYER_COST[g_selectedCard];
-                    if (g_coins >= cost && isCardUnlocked(g_selectedCard, g_coins, g_hasEarnedExtraCoins)) {
-                        spawnPlayerInLane(g_hoveredLane, (PlayerType)g_selectedCard, g_cursorNDC.x);
-                        g_laneSelected[g_hoveredLane] = true;
-                        g_lastSelectedLane = g_hoveredLane;
-                        g_isPlacingUnit = false;
-                    }
-                }
-                else {
-                    toggleLaneSelection(g_hoveredLane);
+                toggleLaneSelection(g_hoveredLane);
+                if (g_laneSelected[g_hoveredLane]) {
+                    g_lanePlacementX[g_hoveredLane] = g_cursorNDC.x;
                 }
                 return;
             }
@@ -206,7 +200,8 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 
 void keyCallback(GLFWwindow*, int key, int, int action, int)
 {
-    if (action != GLFW_PRESS) return;
+    bool jumpKey = (key == GLFW_KEY_W || key == GLFW_KEY_UP);
+    if (action != GLFW_PRESS && !(action == GLFW_REPEAT && jumpKey)) return;
 
     if (key == GLFW_KEY_ESCAPE) {
         if (g_gameState == STATE_CUTSCENE) {
@@ -231,9 +226,11 @@ void keyCallback(GLFWwindow*, int key, int, int action, int)
         for (int i = 0; i < (int)g_players.size(); ++i) {
             PlayerUnit& p = g_players[i];
             if (p.alive && p.type != PLAYER_DEFENSE && g_laneSelected[p.lane]) {
+                // Refresh evasion without restarting the upward animation.
+                if (!p.isJumping) p.jumpElapsed = 0.0f;
                 p.isJumping = true;
                 p.isDucking = false;
-                p.actionTimer = 0.65f;
+                p.actionTimer = JUMP_DURATION;
             }
         }
     }
@@ -250,19 +247,19 @@ void keyCallback(GLFWwindow*, int key, int, int action, int)
     else if (key == GLFW_KEY_1) {
         if (isCardUnlocked(0, g_coins, g_hasEarnedExtraCoins)) {
             g_selectedCard = 0;
-            g_isPlacingUnit = true;
+            g_isPlacingUnit = false;
         }
     }
     else if (key == GLFW_KEY_2) {
         if (isCardUnlocked(1, g_coins, g_hasEarnedExtraCoins)) {
             g_selectedCard = 1;
-            g_isPlacingUnit = true;
+            g_isPlacingUnit = false;
         }
     }
     else if (key == GLFW_KEY_3) {
         if (isCardUnlocked(2, g_coins, g_hasEarnedExtraCoins)) {
             g_selectedCard = 2;
-            g_isPlacingUnit = true;
+            g_isPlacingUnit = false;
         }
     }
     else if (key == GLFW_KEY_C) {
@@ -440,8 +437,18 @@ int main()
                 float redIntensity = (1.0f - (float)p.hp / (float)p.maxHp) * 0.85f;
                 float animTime = (g_gameState == STATE_PLAYING) ? currentFrame : 0.0f;
                 glm::vec2 pos(p.x, LANE_CENTER_Y[p.lane]);
-                float yOffset = p.isJumping ? 0.075f : (p.isDucking ? -0.035f : 0.0f);
-                drawPlayerModel(p.type, pos, animTime, redIntensity, p.isJumping, p.isDucking);
+                float jumpHeight = 0.0f;
+                if (p.isJumping) {
+                    float halfJump = JUMP_DURATION * 0.5f;
+                    float progress = p.jumpElapsed / halfJump;
+                    if (p.actionTimer / halfJump < progress) progress = p.actionTimer / halfJump;
+                    if (progress < 0.0f) progress = 0.0f;
+                    if (progress > 1.0f) progress = 1.0f;
+                    // Rise, stay up while jump is refreshed, then ease back down.
+                    jumpHeight = 0.10f * progress * (2.0f - progress);
+                }
+                float yOffset = p.isJumping ? jumpHeight : (p.isDucking ? -0.035f : 0.0f);
+                drawPlayerModel(p.type, pos, animTime, redIntensity, p.isJumping, p.isDucking, 0, p.inMeleeCombat, jumpHeight);
                 drawHealthBar(pos + glm::vec2(0.0f, 0.135f + yOffset), p.hp, p.maxHp);
             }
 
