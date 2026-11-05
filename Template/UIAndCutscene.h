@@ -711,68 +711,19 @@ inline void drawBattlefieldLanes(float highlightLane = -1.0f)
 // -------------------------------------------------------------------------
 
 // Main Menu: Full Castle Environment + Lanes + Home Base + Royal Navy Modal
-inline void drawVolumeBar(glm::vec2 center, int volumePercent)
-{
-    glm::mat4 base(1.0f);
-    glm::vec2 barSize(0.46f, 0.040f);
-    drawPart(g_quadMesh, base, center, barSize + glm::vec2(0.008f, 0.008f), 0.0f, glm::vec3(0.08f, 0.10f, 0.14f));
-    drawPart(g_quadMesh, base, center, barSize, 0.0f, glm::vec3(0.18f, 0.22f, 0.28f));
-
-    int activeSegments = volumePercent / 10;
-    float segW = (barSize.x - 0.022f) / 10.0f;
-    float startX = center.x - (barSize.x * 0.5f) + (segW * 0.5f) + 0.011f;
-
-    for (int s = 0; s < 10; ++s) {
-        float sx = startX + (float)s * segW;
-        glm::vec3 segCol = (s < activeSegments) ? glm::vec3(0.25f, 0.85f, 0.40f) : glm::vec3(0.28f, 0.32f, 0.38f);
-        if (s < activeSegments && s >= 6) segCol = glm::vec3(1.0f, 0.80f, 0.20f);
-        if (s < activeSegments && s >= 9) segCol = glm::vec3(1.0f, 0.35f, 0.25f);
-        drawPart(g_quadMesh, base, glm::vec2(sx, center.y), glm::vec2(segW - 0.004f, barSize.y - 0.010f), 0.0f, segCol);
-    }
-}
-
-// Sound Settings Menu (Bonus Requirement: Page 14)
-inline void renderSoundSettingsUI(float time, glm::vec2 cursorNDC)
-{
-    drawDetailedEnvironment(time);
-    drawBattlefieldLanes();
-    drawDetailedHomeBase();
-
-    glm::vec2 modalCenter(0.0f, 0.00f);
-    glm::vec2 modalSize(0.72f, 0.82f);
-    drawModalFrame(modalCenter, modalSize, glm::vec3(0.14f, 0.18f, 0.26f), "SOUND SETTINGS", "- CLASH AUDIO & VOLUME -", 1, time);
-
-    std::string volStr = g_audioMuted ? "STATUS: MUTED" : ("VOLUME: " + std::to_string(g_audioVolume) + "%");
-    glm::vec3 volCol = g_audioMuted ? glm::vec3(0.95f, 0.35f, 0.35f) : glm::vec3(1.0f, 0.88f, 0.25f);
-    drawCenteredTextWithShadow(volStr, glm::vec2(0.0f, 0.14f), 1.00f, volCol);
-
-    drawVolumeBar(glm::vec2(0.0f, 0.08f), g_audioMuted ? 0 : g_audioVolume);
-
-    drawButton(glm::vec2(-0.13f, -0.01f), glm::vec2(0.20f, 0.085f), glm::vec3(0.35f, 0.40f, 0.50f), 0, cursorNDC, "VOL -");
-    drawButton(glm::vec2(0.13f, -0.01f), glm::vec2(0.20f, 0.085f), glm::vec3(0.35f, 0.40f, 0.50f), 0, cursorNDC, "VOL +");
-
-    glm::vec3 muteCol = g_audioMuted ? glm::vec3(0.85f, 0.25f, 0.25f) : glm::vec3(0.20f, 0.65f, 0.30f);
-    std::string muteLabel = g_audioMuted ? "UNMUTE ALL" : "MUTE ALL";
-    drawButton(glm::vec2(0.0f, -0.11f), glm::vec2(0.46f, 0.085f), muteCol, 0, cursorNDC, muteLabel);
-
-    drawButton(glm::vec2(0.0f, -0.20f), glm::vec2(0.46f, 0.085f), glm::vec3(0.85f, 0.55f, 0.15f), 0, cursorNDC, "TEST SFX");
-    drawButton(glm::vec2(0.0f, -0.29f), glm::vec2(0.46f, 0.085f), glm::vec3(0.25f, 0.30f, 0.40f), 3, cursorNDC, "BACK");
-}
-
-// Main Menu: Full Castle Environment + Lanes + Home Base + 3 Options (Play, Sound, Exit)
 inline void renderMainMenuUI(float time, glm::vec2 cursorNDC)
 {
+    // Draw the full castle environment, green battlefield lanes, and home base tower
     drawDetailedEnvironment(time);
     drawBattlefieldLanes();
     drawDetailedHomeBase();
 
-    glm::vec2 modalCenter(0.0f, 0.00f);
-    glm::vec2 modalSize(0.72f, 0.82f);
+    glm::vec2 modalCenter(0.0f, 0.02f);
+    glm::vec2 modalSize(0.72f, 0.68f);
     drawModalFrame(modalCenter, modalSize, glm::vec3(0.14f, 0.18f, 0.26f), "CASTLE SIEGE", "- 2D TOWER DEFENSE -", 1, time);
 
-    drawButton(glm::vec2(0.0f, 0.08f), glm::vec2(0.46f, 0.110f), glm::vec3(0.20f, 0.65f, 0.30f), 1, cursorNDC, "PLAY");
-    drawButton(glm::vec2(0.0f, -0.06f), glm::vec2(0.46f, 0.110f), glm::vec3(0.85f, 0.55f, 0.15f), 0, cursorNDC, "SOUND");
-    drawButton(glm::vec2(0.0f, -0.20f), glm::vec2(0.46f, 0.110f), glm::vec3(0.75f, 0.22f, 0.22f), 3, cursorNDC, "EXIT");
+    drawButton(glm::vec2(0.0f, 0.00f), glm::vec2(0.48f, 0.130f), glm::vec3(0.20f, 0.65f, 0.30f), 1, cursorNDC);
+    drawButton(glm::vec2(0.0f, -0.17f), glm::vec2(0.40f, 0.110f), glm::vec3(0.75f, 0.22f, 0.22f), 3, cursorNDC);
 }
 
 // Pause Menu: Iron Slate Modal, Portcullis Pillars, "GAME PAUSED" Header
