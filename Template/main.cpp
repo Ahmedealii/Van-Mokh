@@ -209,6 +209,11 @@ void keyCallback(GLFWwindow*, int key, int, int action, int)
     if (action != GLFW_PRESS) return;
 
     if (key == GLFW_KEY_ESCAPE) {
+        if (g_gameState == STATE_CUTSCENE) {
+            resetGame();
+            g_gameState = STATE_PLAYING;
+            return;
+        }
         if (g_gameState == STATE_PLAYING) {
             if (g_isPlacingUnit) {
                 g_isPlacingUnit = false;

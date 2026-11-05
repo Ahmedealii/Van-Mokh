@@ -71,13 +71,10 @@ inline void drawProceduralChar(char c, glm::vec2 pos, float scale, glm::vec3 col
         drawPart(g_quadMesh, base, glm::vec2(xm, yb), glm::vec2(w, t), 0.0f, col);
     }
     else if (c == 'D') {
-        // Crisp, gap-free procedural 'D' with clean rounded/stepped corners
         drawPart(g_quadMesh, base, glm::vec2(xl, ym), glm::vec2(t, h), 0.0f, col);
-        drawPart(g_quadMesh, base, glm::vec2(xl + w * 0.40f, yt), glm::vec2(w * 0.80f, t), 0.0f, col);
-        drawPart(g_quadMesh, base, glm::vec2(xl + w * 0.40f, yb), glm::vec2(w * 0.80f, t), 0.0f, col);
-        drawPart(g_quadMesh, base, glm::vec2(xr, ym), glm::vec2(t, h * 0.70f), 0.0f, col);
-        drawPart(g_quadMesh, base, glm::vec2(xr - w * 0.10f, yt - h * 0.08f), glm::vec2(t * 1.5f, t * 1.5f), 0.0f, col);
-        drawPart(g_quadMesh, base, glm::vec2(xr - w * 0.10f, yb + h * 0.08f), glm::vec2(t * 1.5f, t * 1.5f), 0.0f, col);
+        drawPart(g_quadMesh, base, glm::vec2(xl + w * 0.45f, yt), glm::vec2(w * 0.9f, t), 0.0f, col);
+        drawPart(g_quadMesh, base, glm::vec2(xl + w * 0.45f, yb), glm::vec2(w * 0.9f, t), 0.0f, col);
+        drawPart(g_quadMesh, base, glm::vec2(xr, ym), glm::vec2(t, h - t), 0.0f, col);
     }
     else if (c == 'E') {
         drawPart(g_quadMesh, base, glm::vec2(xl, ym), glm::vec2(t, h), 0.0f, col);
@@ -229,8 +226,8 @@ inline void drawProceduralChar(char c, glm::vec2 pos, float scale, glm::vec3 col
         drawPart(g_quadMesh, base, glm::vec2(xr - w * 0.3f, yb), glm::vec2(w * 0.6f, t), 0.0f, col);
     }
     else if (c >= '0' && c <= '9') {
-        drawDigit(c - '0', glm::vec2(xm, ym), scale * 1.2f, col);
-    }
+        drawDigit(c - '0', glm::vec2(xm, ym), scale * 0.77f, col);
+        }
 }
 
 inline void drawText(const std::string& text, glm::vec2 pos, float scale, glm::vec3 col)

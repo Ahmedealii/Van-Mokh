@@ -63,11 +63,11 @@ inline void drawDigit(int digit, glm::vec2 pos, float scale, glm::vec3 col, int 
     };
 
     if (seg[digit][0]) drawPart(g_quadMesh, base, pos + glm::vec2(0.0f, w), glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
-    if (seg[digit][1]) drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
-    if (seg[digit][2]) drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
+    if (seg[digit][1]) drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, 0.0f, gray);
+    if (seg[digit][2]) drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, 0.0f, gray);
     if (seg[digit][3]) drawPart(g_quadMesh, base, pos, glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
-    if (seg[digit][4]) drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, -w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
-    if (seg[digit][5]) drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, -w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, gray);
+    if (seg[digit][4]) drawPart(g_quadMesh, base, pos + glm::vec2(-w * 0.5f, -w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, 0.0f, gray);
+    if (seg[digit][5]) drawPart(g_quadMesh, base, pos + glm::vec2(w * 0.5f, -w * 0.5f), glm::vec2(t, w), 0.0f, col, 0.0f, 0.0f, gray);
     if (seg[digit][6]) drawPart(g_quadMesh, base, pos + glm::vec2(0.0f, -w), glm::vec2(w, t), 0.0f, col, 0.0f, 0.0f, gray);
 }
 
@@ -86,7 +86,7 @@ inline void drawNumber(int number, glm::vec2 pos, float scale, glm::vec3 col, in
     float step = 0.032f * scale;
     for (int i = (int)digits.size() - 1; i >= 0; --i) {
         int idx = (int)digits.size() - 1 - i;
-        drawDigit(digits[i], pos + glm::vec2(idx * step, 0.0f), scale, col, gray);
+        drawDigit(digits[i], pos + glm::vec2((float)idx * step, 0.0f), scale, col, gray);
     }
 }
 
@@ -99,7 +99,7 @@ inline void drawHealthBar(glm::vec2 pos, int hp, int maxHp)
     float segW = (barW / (float)maxHp) * 0.85f;
     float startX = pos.x - barW * 0.5f + (barW / (float)maxHp) * 0.5f;
     for (int i = 0; i < hp; ++i) {
-        glm::vec2 segPos(startX + i * (barW / (float)maxHp), pos.y);
+        glm::vec2 segPos(startX + (float)i * (barW / (float)maxHp), pos.y);
         drawPart(g_quadMesh, base, segPos, glm::vec2(segW, barH * 0.8f), 0.0f, glm::vec3(0.2f, 0.9f, 0.25f));
     }
 }
@@ -118,7 +118,7 @@ inline void drawHomeBase()
         drawPart(g_quadMesh, base, glm::vec2(-0.83f, cy), glm::vec2(0.01f, 0.16f), 0.0f, glm::vec3(0.2f, 0.2f, 0.22f));
     }
     for (int i = 0; i < 4; ++i) {
-        drawPart(g_quadMesh, base, glm::vec2(-0.96f + i * 0.045f, 0.61f), glm::vec2(0.03f, 0.06f), 0.0f, glm::vec3(0.45f, 0.47f, 0.52f));
+        drawPart(g_quadMesh, base, glm::vec2(-0.96f + (float)i * 0.045f, 0.61f), glm::vec2(0.03f, 0.06f), 0.0f, glm::vec3(0.45f, 0.47f, 0.52f));
     }
     drawPart(g_triangleMesh, base, glm::vec2(-0.90f, 0.72f), glm::vec2(0.20f, 0.18f), 0.0f, glm::vec3(0.15f, 0.35f, 0.80f));
 }
@@ -128,7 +128,7 @@ inline void drawEnvironment(float time)
     glm::mat4 base(1.0f);
     drawPart(g_quadMesh, base, glm::vec2(0.1f, 0.62f), glm::vec2(1.8f, 0.14f), 0.0f, glm::vec3(0.32f, 0.33f, 0.37f));
     for (int i = 0; i < 12; ++i) {
-        drawPart(g_quadMesh, base, glm::vec2(-0.70f + i * 0.14f, 0.71f), glm::vec2(0.07f, 0.05f), 0.0f, glm::vec3(0.38f, 0.39f, 0.43f));
+        drawPart(g_quadMesh, base, glm::vec2(-0.70f + (float)i * 0.14f, 0.71f), glm::vec2(0.07f, 0.05f), 0.0f, glm::vec3(0.38f, 0.39f, 0.43f));
     }
 
     float towerX[3] = { -0.35f, 0.35f, 0.85f };
@@ -156,12 +156,14 @@ inline void drawEnvironment(float time)
         drawPart(g_triangleMesh, base, glm::vec2(fx, 0.625f), glm::vec2(0.018f, 0.028f), -flicker, glm::vec3(1.0f, 0.90f, 0.20f));
     }
 
-    for (int i = 0; i < 6; ++i) {
-        float rx = -0.65f + i * 0.28f;
-        drawPart(g_circleMesh, base, glm::vec2(rx, -0.92f), glm::vec2(0.05f, 0.035f), 0.0f, glm::vec3(0.40f, 0.42f, 0.45f));
-        drawPart(g_circleMesh, base, glm::vec2(rx + 0.03f, -0.93f), glm::vec2(0.035f, 0.025f), 0.0f, glm::vec3(0.50f, 0.52f, 0.55f));
-        drawPart(g_triangleMesh, base, glm::vec2(rx + 0.12f, -0.90f), glm::vec2(0.07f, 0.08f), 0.0f, glm::vec3(0.15f, 0.48f, 0.20f));
-        drawPart(g_triangleMesh, base, glm::vec2(rx + 0.12f, -0.86f), glm::vec2(0.055f, 0.07f), 0.0f, glm::vec3(0.20f, 0.58f, 0.25f));
+    // Clean bottom scenery: simple stones & pine trees in front of the lanes (no random sticks)
+    for (int i = 0; i < 5; ++i) {
+        float rx = -0.60f + (float)i * 0.35f;
+        drawPart(g_circleMesh, base, glm::vec2(rx, -0.92f), glm::vec2(0.045f, 0.030f), 0.0f, glm::vec3(0.40f, 0.42f, 0.45f));
+        drawPart(g_circleMesh, base, glm::vec2(rx + 0.03f, -0.93f), glm::vec2(0.030f, 0.022f), 0.0f, glm::vec3(0.50f, 0.52f, 0.55f));
+        drawPart(g_quadMesh, base, glm::vec2(rx + 0.14f, -0.93f), glm::vec2(0.016f, 0.04f), 0.0f, glm::vec3(0.42f, 0.25f, 0.12f));
+        drawPart(g_triangleMesh, base, glm::vec2(rx + 0.14f, -0.89f), glm::vec2(0.07f, 0.08f), 0.0f, glm::vec3(0.15f, 0.48f, 0.20f));
+        drawPart(g_triangleMesh, base, glm::vec2(rx + 0.14f, -0.85f), glm::vec2(0.055f, 0.07f), 0.0f, glm::vec3(0.20f, 0.58f, 0.25f));
     }
 }
 
@@ -216,9 +218,9 @@ inline void drawPlayerModel(PlayerType type, glm::vec2 pos, float time, float re
 inline void drawEnemyModel(EnemyType type, glm::vec2 pos, float time, float redTint)
 {
     glm::mat4 base = glm::translate(glm::mat4(1.0f), glm::vec3(pos.x, pos.y, 0.0f));
-    float walkBob = std::sin(time * 9.0f) * 14.0f;5
+    float walkBob = std::sin(time * 9.0f) * 14.0f;
 
-        ;if (type == ENEMY_EASY_UPPER) {
+    if (type == ENEMY_EASY_UPPER) {
         float hoverY = 0.035f + std::sin(time * 5.0f) * 0.015f;
         glm::mat4 flyMat = glm::translate(base, glm::vec3(0.0f, hoverY, 0.0f));
         float wingFlap = std::sin(time * 12.0f) * 22.0f;

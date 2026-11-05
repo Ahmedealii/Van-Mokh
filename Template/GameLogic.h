@@ -248,6 +248,7 @@ inline void updateGameplay(float dt)
     for (int i = 0; i < (int)g_players.size(); ++i) g_players[i].inMeleeCombat = false;
     for (int i = 0; i < (int)g_enemies.size(); ++i) g_enemies[i].inMeleeCombat = false;
 
+    // Both Melee AND Ranged units collide with enemies upon reaching contact distance (0.085f)
     for (int i = 0; i < (int)g_players.size(); ++i) {
         if (!g_players[i].alive) continue;
         for (int j = 0; j < (int)g_enemies.size(); ++j) {
@@ -271,7 +272,7 @@ inline void updateGameplay(float dt)
             }
         }
 
-        // Check for uncollected coins ahead in this lane
+        // Check for uncollected coins ahead in this specific lane
         bool hasCoinAhead = false;
         for (int j = 0; j < (int)g_collectibles.size(); ++j) {
             const Collectible& c = g_collectibles[j];
@@ -283,43 +284,18 @@ inline void updateGameplay(float dt)
 
         // Check for alive enemies ahead in this specific lane
         bool hasEnemyInLane = false;
-        float nearestEnemyDist = 999.0f;
         for (int j = 0; j < (int)g_enemies.size(); ++j) {
             const EnemyUnit& e = g_enemies[j];
             if (e.alive && e.lane == p.lane && e.x >= p.x - 0.05f) {
                 hasEnemyInLane = true;
-                float dist = e.x - p.x;
-                if (dist < nearestEnemyDist) {
-                    nearestEnemyDist = dist;
-                }
+                break;
             }
         }
 
-        const float ARCHER_ATTACK_RANGE = 0.70f;
-
+        // Both Melee and Ranged troops advance toward enemies or dropped coins in their lane.
+        // Once in physical collision with an enemy (inMeleeCombat), movement stops automatically.
         if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
-            bool shouldAdvance = false;
-
-            if (p.type == PLAYER_MELEE) {
-                // Melee knights advance only if an enemy or dropped coin is in their lane
-                if (hasEnemyInLane || hasCoinAhead) {
-                    shouldAdvance = true;
-                }
-            }
-            else if (p.type == PLAYER_RANGED) {
-                // Archers stay completely still when shooting an enemy in range
-                if (hasEnemyInLane) {
-                    if (nearestEnemyDist > ARCHER_ATTACK_RANGE) {
-                        shouldAdvance = true;
-                    }
-                    else {
-                        shouldAdvance = false;
-                    }
-                }
-                else if (hasCoinAhead) {
-                    shouldAdvance = true;
-                }
-            }
+            bool shouldAdvance = (hasEnemyInLane || hasCoinAhead);
 
             if (shouldAdvance) {
                 p.x += 0.14f * dt;
@@ -330,8 +306,8 @@ inline void updateGameplay(float dt)
         p.attackTimer -= dt;
         if (p.attackTimer <= 0.0f) {
             if (p.type == PLAYER_RANGED) {
-                // Only fire arrows when an enemy is in this lane and within range
-                if (hasEnemyInLane && nearestEnemyDist <= ARCHER_ATTACK_RANGE) {
+                // Ranged archers shoot forward while advancing or in combat as long as an enemy is in their lane
+                if (hasEnemyInLane) {
                     Projectile proj;
                     proj.lane = p.lane;
                     proj.x = p.x + 0.04f;
@@ -431,6 +407,7 @@ inline void updateGameplay(float dt)
             if (proj.hitAnimTimer <= 0.0f) proj.alive = false;
             continue;
         }
+
         proj.x += (proj.fromPlayer ? 0.55f : -0.40f) * dt;
         if (proj.x < LANE_LEFT_X || proj.x > LANE_RIGHT_X + 0.05f) {
             proj.alive = false;
