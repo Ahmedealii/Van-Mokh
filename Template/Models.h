@@ -107,9 +107,11 @@ inline void drawHealthBar(glm::vec2 pos, int hp, int maxHp)
 inline void drawHomeBase()
 {
     glm::mat4 base(1.0f);
+    // Simple stone tower body
     drawPart(g_quadMesh, base, glm::vec2(-0.90f, -0.15f), glm::vec2(0.18f, 1.45f), 0.0f, glm::vec3(0.45f, 0.47f, 0.52f));
     drawPart(g_quadMesh, base, glm::vec2(-0.88f, -0.15f), glm::vec2(0.12f, 1.38f), 0.0f, glm::vec3(0.55f, 0.57f, 0.62f));
 
+    // 4 simple wooden arch doors for the 4 lanes
     float cy_arr[4] = { 0.375f, 0.025f, -0.325f, -0.675f };
     for (int i = 0; i < 4; ++i) {
         float cy = cy_arr[i];
@@ -117,9 +119,11 @@ inline void drawHomeBase()
         drawPart(g_circleMesh, base, glm::vec2(-0.84f, cy + 0.06f), glm::vec2(0.03f, 0.03f), 0.0f, glm::vec3(0.42f, 0.25f, 0.12f));
         drawPart(g_quadMesh, base, glm::vec2(-0.83f, cy), glm::vec2(0.01f, 0.16f), 0.0f, glm::vec3(0.2f, 0.2f, 0.22f));
     }
+    // 4 simple battlements along the top
     for (int i = 0; i < 4; ++i) {
         drawPart(g_quadMesh, base, glm::vec2(-0.96f + (float)i * 0.045f, 0.61f), glm::vec2(0.03f, 0.06f), 0.0f, glm::vec3(0.45f, 0.47f, 0.52f));
     }
+    // Clean blue triangle roof
     drawPart(g_triangleMesh, base, glm::vec2(-0.90f, 0.72f), glm::vec2(0.20f, 0.18f), 0.0f, glm::vec3(0.15f, 0.35f, 0.80f));
 }
 

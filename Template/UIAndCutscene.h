@@ -343,18 +343,18 @@ inline void drawProjectile(const Projectile& p, float time)
     }
     else {
         if (p.isHigh) {
-            // Enemy High Magic Orb (Pulsing violet/arcane sphere with rotating outer spark)
+            // Enemy High Magic Orb (Pulsing violet/arcane sphere with centered core)
             float orbPulse = 1.0f + 0.12f * std::sin(time * 12.0f);
             drawPart(g_circleMesh, base, glm::vec2(p.x, y), glm::vec2(0.024f * orbPulse, 0.024f * orbPulse), 0.0f, glm::vec3(0.70f, 0.15f, 0.85f));
             drawPart(g_circleMesh, base, glm::vec2(p.x, y), glm::vec2(0.016f, 0.016f), 0.0f, glm::vec3(0.98f, 0.40f, 0.95f));
-            drawPart(g_triangleMesh, base, glm::vec2(p.x + 0.015f, y), glm::vec2(0.018f, 0.018f), time * 320.0f, glm::vec3(1.0f, 0.85f, 1.0f));
+            drawPart(g_triangleMesh, base, glm::vec2(p.x, y), glm::vec2(0.013f, 0.013f), time * 320.0f, glm::vec3(1.0f, 1.0f, 1.0f));
         }
         else {
-            // Enemy Low Magic Orb (Fiery orange/red fireball with blazing trail)
+            // Enemy Low Magic Orb (Fiery orange/red fireball with centered core)
             float firePulse = 1.0f + 0.10f * std::sin(time * 10.0f);
             drawPart(g_circleMesh, base, glm::vec2(p.x, y), glm::vec2(0.024f * firePulse, 0.024f * firePulse), 0.0f, glm::vec3(1.0f, 0.35f, 0.05f));
             drawPart(g_circleMesh, base, glm::vec2(p.x, y), glm::vec2(0.015f, 0.015f), 0.0f, glm::vec3(1.0f, 0.88f, 0.20f));
-            drawPart(g_triangleMesh, base, glm::vec2(p.x + 0.018f, y), glm::vec2(0.022f, 0.020f), -90.0f, glm::vec3(1.0f, 0.92f, 0.30f));
+            drawPart(g_triangleMesh, base, glm::vec2(p.x, y), glm::vec2(0.013f, 0.013f), -time * 320.0f, glm::vec3(1.0f, 0.95f, 0.40f));
         }
     }
 }
@@ -894,15 +894,14 @@ inline void renderCutscene(float time, float cutsceneTimer)
     drawDetailedHomeBase();
 
     // 2. Castle Spire Power Crystal
-    float crystalGlow = 1.0f + 0.15f * std::sin(time * 8.0f);
-    float crystalBob = std::sin(time * 4.0f) * 0.010f;
-    glm::vec2 crystalPos = glm::vec2(-0.84f, 0.72f + crystalBob) + cameraOffset;
-
-    drawPart(g_circleMesh, base, crystalPos, glm::vec2(0.045f * crystalGlow, 0.045f * crystalGlow), 0.0f, glm::vec3(0.20f, 0.60f, 1.0f) * 0.7f);
-    drawPart(g_circleMesh, base, crystalPos, glm::vec2(0.030f * crystalGlow, 0.030f * crystalGlow), 0.0f, glm::vec3(0.40f, 0.85f, 1.0f));
-    drawPart(g_triangleMesh, base, crystalPos + glm::vec2(0.0f, 0.012f), glm::vec2(0.040f, 0.045f), 0.0f, glm::vec3(0.50f, 0.92f, 1.0f));
-    drawPart(g_triangleMesh, base, crystalPos - glm::vec2(0.0f, 0.012f), glm::vec2(0.040f, 0.045f), 180.0f, glm::vec3(0.25f, 0.70f, 0.98f));
-
+    // Draw the exact same 4 striped lanes as active gameplay for visual continuity
+    for (int i = 0; i < NUM_LANES; ++i) {
+        float cy = LANE_CENTER_Y[i];
+        float h = LANE_TOP_Y[i] - LANE_BOTTOM_Y[i];
+        glm::vec3 laneCol = (i % 2 == 0) ? glm::vec3(0.32f, 0.65f, 0.24f) : glm::vec3(0.27f, 0.58f, 0.20f);
+        drawPart(g_quadMesh, base, glm::vec2(0.085f, cy) + cameraOffset, glm::vec2(1.73f, h - 0.01f), 0.0f, laneCol);
+        drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]) + cameraOffset, glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));
+    }
     // 3. Units & Choreography across lanes
     // --- ENEMY WARBAND (Right Side) ---
     float enemyProg = smoothstep(0.0f, 4.2f, cutsceneTimer);
