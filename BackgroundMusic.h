@@ -1,3 +1,4 @@
+#ifdef _WIN32
 #pragma once
 
 // Minimal Windows background-music player for this project.
@@ -79,3 +80,7 @@ namespace BackgroundMusic {
         isPlaying() = true;
     }
 }
+
+#else
+namespace BackgroundMusic { inline void start(){} inline void stop(){} }
+#endif
