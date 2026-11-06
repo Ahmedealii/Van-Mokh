@@ -61,30 +61,32 @@ inline std::string findSoundFile(const std::vector<std::string>& candidates)
     return "";
 }
 
-inline void playMciSound(const char* alias, const std::vector<std::string>& candidates)
+inline void playMciSound(const char* baseAlias, const std::vector<std::string>& candidates)
 {
 #ifdef _WIN32
     if (g_audioMuted || g_audioVolume <= 0) return;
 
     std::string path = findSoundFile(candidates);
     if (path.empty()) {
-        std::cerr << "[Audio] Sound file not found for: " << alias << '\n';
+        std::cerr << "[Audio] Sound file not found for: " << baseAlias << '\n';
         return;
     }
 
-    // Close any previous instance of this sound
+    // Rotating alias pool (0 to 3) so simultaneous rapid attacks, hits, or deaths do not cut each other off
+    static int s_channelCounter = 0;
+    std::string alias = std::string(baseAlias) + "_" + std::to_string((s_channelCounter++) % 4);
+
+    // Close any previous instance on this channel
     std::string closeCmd = std::string("close ") + alias;
     mciSendStringA(closeCmd.c_str(), nullptr, 0, nullptr);
 
-    // Open file using the modern DirectShow MPEG engine (prevents legacy wave device error)
+    // Open file using modern DirectShow MPEG audio engine
     std::string openCmd = std::string("open \"") + path + "\" type mpegvideo alias " + alias;
     MCIERROR err = mciSendStringA(openCmd.c_str(), nullptr, 0, nullptr);
     if (err) {
-        // Fallback without explicit type if needed
         openCmd = std::string("open \"") + path + "\" alias " + alias;
         err = mciSendStringA(openCmd.c_str(), nullptr, 0, nullptr);
     }
-
     if (err) {
         char errBuf[256] = {};
         mciGetErrorStringA(err, errBuf, sizeof(errBuf));
@@ -92,16 +94,14 @@ inline void playMciSound(const char* alias, const std::vector<std::string>& cand
         return;
     }
 
-    // Set volume (0 to 1000)
     int mciVol = g_audioMuted ? 0 : (g_audioVolume * 10);
     std::string volCmd = std::string("setaudio ") + alias + " volume to " + std::to_string(mciVol);
     mciSendStringA(volCmd.c_str(), nullptr, 0, nullptr);
 
-    // Play sound from start
     std::string playCmd = std::string("play ") + alias + " from 0";
     mciSendStringA(playCmd.c_str(), nullptr, 0, nullptr);
 #else
-    (void)alias; (void)candidates;
+    (void)baseAlias; (void)candidates;
 #endif
 }
 

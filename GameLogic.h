@@ -283,8 +283,7 @@ inline void updateGameplay(float dt)
             }
         }
 
-        // Rise quickly, stay airborne, then land near the end of the jump.
-        // Another jump press refreshes the timer without resetting the height.
+        // Rise quickly, stay airborne, then land near the end of the jump
         float targetHeight = (p.isJumping && p.actionTimer > 0.15f) ? 0.11f : 0.0f;
         if (p.jumpHeight < targetHeight) {
             p.jumpHeight += 0.8f * dt;
@@ -305,8 +304,7 @@ inline void updateGameplay(float dt)
             }
         }
 
-        // Melee and ranged troops always advance unless an enemy is touching them.
-        // Contact is checked again each frame, so they resume after the enemy dies.
+        // Melee and ranged troops advance unless an enemy is in melee contact with them
         if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
             p.x += 0.14f * dt;
             if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
@@ -315,7 +313,7 @@ inline void updateGameplay(float dt)
         p.attackTimer -= dt;
         if (p.attackTimer <= 0.0f) {
             if (p.type == PLAYER_RANGED) {
-                // Ranged archers shoot forward while advancing or in combat as long as an enemy is in their lane
+                // Ranged archers shoot forward while an enemy is in their lane
                 if (hasEnemyInLane) {
                     Projectile proj;
                     proj.lane = p.lane;
@@ -339,8 +337,10 @@ inline void updateGameplay(float dt)
                     EnemyUnit& e = g_enemies[j];
                     if (e.alive && e.lane == p.lane && std::abs(p.x - e.x) <= 0.10f) {
                         e.hp -= 1;
+                        playAudioHit();
                         if (e.hp <= 0) {
                             e.alive = false;
+                            playAudioDeath();
                             Collectible c;
                             c.lane = e.lane;
                             c.x = e.x;
@@ -401,7 +401,11 @@ inline void updateGameplay(float dt)
                     PlayerUnit& p = g_players[j];
                     if (p.alive && p.lane == e.lane && std::abs(p.x - e.x) <= 0.10f) {
                         p.hp -= 2;
-                        if (p.hp <= 0) p.alive = false;
+                        playAudioHit();
+                        if (p.hp <= 0) {
+                            p.alive = false;
+                            playAudioDeath();
+                        }
                         break;
                     }
                 }
@@ -431,10 +435,12 @@ inline void updateGameplay(float dt)
                 EnemyUnit& e = g_enemies[j];
                 if (e.alive && e.lane == proj.lane && std::abs(proj.x - e.x) <= 0.045f) {
                     e.hp -= proj.damage;
+                    playAudioHit();
                     proj.hitting = true;
                     proj.hitAnimTimer = 0.20f;
                     if (e.hp <= 0) {
                         e.alive = false;
+                        playAudioDeath();
                         Collectible c;
                         c.lane = e.lane;
                         c.x = e.x;
@@ -466,8 +472,12 @@ inline void updateGameplay(float dt)
                         if (!proj.isHigh && p.isJumping) continue;
                     }
                     p.hp -= proj.damage;
+                    playAudioHit();
                     proj.alive = false;
-                    if (p.hp <= 0) p.alive = false;
+                    if (p.hp <= 0) {
+                        p.alive = false;
+                        playAudioDeath();
+                    }
                     break;
                 }
             }
