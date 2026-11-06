@@ -166,7 +166,7 @@ inline void toggleLaneSelection(int lane)
 {
     if (lane < 0 || lane >= NUM_LANES) return;
     std::vector<int>& order = laneSelectionOrder();
-    // Remove lanes that were cleared or toggled off before recording this click.
+
     for (int i = (int)order.size() - 1; i >= 0; --i) {
         if (!g_laneSelected[order[i]] || order[i] == lane) {
             order.erase(order.begin() + i);
@@ -259,7 +259,6 @@ inline void updateGameplay(float dt)
     for (int i = 0; i < (int)g_players.size(); ++i) g_players[i].inMeleeCombat = false;
     for (int i = 0; i < (int)g_enemies.size(); ++i) g_enemies[i].inMeleeCombat = false;
 
-    // Both Melee AND Ranged units collide with enemies upon reaching contact distance (0.085f)
     for (int i = 0; i < (int)g_players.size(); ++i) {
         if (!g_players[i].alive) continue;
         for (int j = 0; j < (int)g_enemies.size(); ++j) {
@@ -283,8 +282,6 @@ inline void updateGameplay(float dt)
             }
         }
 
-        // Rise quickly, stay airborne, then land near the end of the jump.
-        // Another jump press refreshes the timer without resetting the height.
         float targetHeight = (p.isJumping && p.actionTimer > 0.15f) ? 0.11f : 0.0f;
         if (p.jumpHeight < targetHeight) {
             p.jumpHeight += 0.8f * dt;
@@ -295,7 +292,6 @@ inline void updateGameplay(float dt)
             if (p.jumpHeight < targetHeight) p.jumpHeight = targetHeight;
         }
 
-        // Check for alive enemies ahead in this specific lane
         bool hasEnemyInLane = false;
         for (int j = 0; j < (int)g_enemies.size(); ++j) {
             const EnemyUnit& e = g_enemies[j];
@@ -305,8 +301,6 @@ inline void updateGameplay(float dt)
             }
         }
 
-        // Melee and ranged troops always advance unless an enemy is touching them.
-        // Contact is checked again each frame, so they resume after the enemy dies.
         if (p.type != PLAYER_DEFENSE && !p.inMeleeCombat) {
             p.x += 0.14f * dt;
             if (p.x > LANE_RIGHT_X) p.x = LANE_RIGHT_X;
@@ -315,7 +309,7 @@ inline void updateGameplay(float dt)
         p.attackTimer -= dt;
         if (p.attackTimer <= 0.0f) {
             if (p.type == PLAYER_RANGED) {
-                // Ranged archers shoot forward while advancing or in combat as long as an enemy is in their lane
+
                 if (hasEnemyInLane) {
                     Projectile proj;
                     proj.lane = p.lane;

@@ -129,18 +129,18 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 {
     if (g_gameState == STATE_MAIN_MENU) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            // PLAY (triggers cutscene then game)
+
             if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, 0.08f), glm::vec2(0.46f, 0.110f))) {
                 playAudioDeploy();
                 g_cutsceneTimer = 0.0f;
                 g_gameState = STATE_CUTSCENE;
             }
-            // SOUND SETTINGS (bonus requirement)
+
             else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.06f), glm::vec2(0.46f, 0.110f))) {
                 playAudioSelect();
                 g_gameState = STATE_SOUND_SETTINGS;
             }
-            // EXIT (closes application)
+
             else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.20f), glm::vec2(0.46f, 0.110f))) {
                 glfwSetWindowShouldClose(window, true);
             }
@@ -150,26 +150,26 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 
     if (g_gameState == STATE_SOUND_SETTINGS) {
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-            // VOL -
+
             if (isPointInBox(g_cursorNDC, glm::vec2(-0.13f, -0.01f), glm::vec2(0.20f, 0.085f))) {
                 setAudioVolume(g_audioVolume - 10);
                 playAudioSelect();
             }
-            // VOL +
+
             else if (isPointInBox(g_cursorNDC, glm::vec2(0.13f, -0.01f), glm::vec2(0.20f, 0.085f))) {
                 setAudioVolume(g_audioVolume + 10);
                 playAudioSelect();
             }
-            // MUTE / UNMUTE
+
             else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.11f), glm::vec2(0.46f, 0.085f))) {
                 toggleAudioMute();
                 playAudioSelect();
             }
-            // TEST SFX
+
             else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.20f), glm::vec2(0.46f, 0.085f))) {
                 playAudioCoin();
             }
-            // BACK to Main Menu
+
             else if (isPointInBox(g_cursorNDC, glm::vec2(0.0f, -0.29f), glm::vec2(0.46f, 0.085f))) {
                 playAudioSelect();
                 g_gameState = STATE_MAIN_MENU;
@@ -422,7 +422,6 @@ int main()
             drawDetailedEnvironment(currentFrame);
             renderTopBarUI(currentFrame, g_coins, g_hasEarnedExtraCoins, g_selectedCard, g_hoveredCard, g_currentWave);
 
-            // 4 Checkered Battlefield Lanes matching the Main Menu & Cutscene
             for (int i = 0; i < NUM_LANES; ++i) {
                 float cy = LANE_CENTER_Y[i];
                 float h = LANE_TOP_Y[i] - LANE_BOTTOM_Y[i];
@@ -436,12 +435,10 @@ int main()
                     highlight = 0.16f;
                 }
 
-                // Base lane strip
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, cy), glm::vec2(1.73f, h - 0.01f), 0.0f, laneCol, 0.0f, highlight);
-                // Dark bottom divider strip
+
                 drawPart(g_quadMesh, base, glm::vec2(0.085f, LANE_BOTTOM_Y[i]), glm::vec2(1.73f, 0.008f), 0.0f, glm::vec3(0.18f, 0.38f, 0.12f));
 
-                // 9 alternating checker tiles per lane
                 float tileW = 1.73f / 9.0f;
                 for (int c = 0; c < 9; ++c) {
                     if ((c + i) % 2 == 1) {
@@ -494,8 +491,6 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        // Music starts only when gameplay begins (not during the menu/cutscene).
-        // Continue through pause; stop immediately on win/lose or main menu.
         if (g_gameState == STATE_PLAYING || g_gameState == STATE_PAUSED) {
             BackgroundMusic::start();
         } else {

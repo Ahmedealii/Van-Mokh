@@ -18,13 +18,9 @@
 #pragma comment(lib, "winmm.lib")
 #endif
 
-// -------------------------------------------------------------------------
-// Global Sound & Volume State (Bonus Requirement: Page 14)
-// -------------------------------------------------------------------------
-extern int  g_audioVolume; // 0 to 100%
-extern bool g_audioMuted;  // true if muted
+extern int  g_audioVolume;
+extern bool g_audioMuted;
 
-// Multi-path file finder that checks both MP3 and WAV variants and relative directories
 inline std::string findSoundFile(const std::vector<std::string>& candidates)
 {
 #ifdef _WIN32
@@ -71,19 +67,16 @@ inline void playMciSound(const char* baseAlias, const std::vector<std::string>& 
         return;
     }
 
-    // Rotating alias pool (0 to 3) so simultaneous rapid attacks, hits, or deaths do not cut each other off
     static int s_channelCounter = 0;
     std::string alias = std::string(baseAlias) + "_" + std::to_string((s_channelCounter++) % 4);
 
-    // Close any previous instance on this channel
     std::string closeCmd = std::string("close ") + alias;
     mciSendStringA(closeCmd.c_str(), nullptr, 0, nullptr);
 
-    // Open file using modern DirectShow MPEG audio engine (prevents legacy wave device error)
     std::string openCmd = std::string("open \"") + path + "\" type mpegvideo alias " + alias;
     MCIERROR err = mciSendStringA(openCmd.c_str(), nullptr, 0, nullptr);
     if (err) {
-        // Fallback without explicit type
+
         openCmd = std::string("open \"") + path + "\" alias " + alias;
         err = mciSendStringA(openCmd.c_str(), nullptr, 0, nullptr);
     }
@@ -94,12 +87,10 @@ inline void playMciSound(const char* baseAlias, const std::vector<std::string>& 
         return;
     }
 
-    // Set volume (0 to 1000)
     int mciVol = g_audioMuted ? 0 : (g_audioVolume * 10);
     std::string volCmd = std::string("setaudio ") + alias + " volume to " + std::to_string(mciVol);
     mciSendStringA(volCmd.c_str(), nullptr, 0, nullptr);
 
-    // Play sound from start
     std::string playCmd = std::string("play ") + alias + " from 0";
     mciSendStringA(playCmd.c_str(), nullptr, 0, nullptr);
 #else
@@ -125,7 +116,6 @@ inline void updateAudioVolume()
         mciSendStringA(cmd, nullptr, 0, nullptr);
     }
 
-    // Also update hardware wave volume
     DWORD dVol = g_audioMuted ? 0 : (DWORD)((g_audioVolume * 65535) / 100);
     waveOutSetVolume(0, (dVol & 0xFFFF) | ((dVol & 0xFFFF) << 16));
 #endif
@@ -154,11 +144,6 @@ inline void initAudio()
     std::cout << "[Audio] Sound system initialized with MCI multi-track audio." << std::endl;
 }
 
-// -------------------------------------------------------------------------
-// Sound Triggers (Mapping your 4 uploaded Clash Royale sound files + extras)
-// -------------------------------------------------------------------------
-
-// 1. Coin collect (variant) Sound Effect
 inline void playAudioCoin()
 {
     std::vector<std::string> files = {
@@ -170,7 +155,6 @@ inline void playAudioCoin()
     playMciSound("sfx_coin", files);
 }
 
-// 2. Death Scream Sound Effect
 inline void playAudioDeath()
 {
     std::vector<std::string> files = {
@@ -182,7 +166,6 @@ inline void playAudioDeath()
     playMciSound("sfx_death", files);
 }
 
-// 3. Clash Royale Soundtrack - Win
 inline void playAudioWin()
 {
     std::vector<std::string> files = {
@@ -194,7 +177,6 @@ inline void playAudioWin()
     playMciSound("sfx_win", files);
 }
 
-// 4. Clash Royale Lose - Meme Sound Effect
 inline void playAudioLose()
 {
     std::vector<std::string> files = {
@@ -206,7 +188,6 @@ inline void playAudioLose()
     playMciSound("sfx_lose", files);
 }
 
-// Additional interaction sounds
 inline void playAudioDeploy()
 {
     std::vector<std::string> files = { "deploy.mp3", "deploy.wav" };

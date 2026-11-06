@@ -1,8 +1,6 @@
 #ifdef _WIN32
 #pragma once
 
-// Minimal Windows background-music player for this project.
-// Windows MCI can decode MP3 audio without an external library.
 #include <windows.h>
 #include <mmsystem.h>
 #include <string>
@@ -27,11 +25,11 @@ namespace BackgroundMusic {
     }
 
     inline std::string findMusicFile() {
-        // Working directory normally is the Template project folder in Visual Studio.
+
         const char* candidates[] = {
             "assets\\audio\\background.mp3",
-            "..\\..\\assets\\audio\\background.mp3", // running from x64/Debug
-            "Template\\assets\\audio\\background.mp3", // running from repository root
+            "..\\..\\assets\\audio\\background.mp3",
+            "Template\\assets\\audio\\background.mp3",
             "..\\Template\\assets\\audio\\background.mp3"
         };
         for (const char* candidate : candidates) {
@@ -70,7 +68,7 @@ namespace BackgroundMusic {
             if (error) { logError("open", error); return; }
             isOpen() = true;
         }
-        // 'repeat' tells the Windows MCI MPEG audio device to loop until stopped.
+
         MCIERROR error = mciSendStringA("play vanMokhBgm from 0 repeat", nullptr, 0, nullptr);
         if (error) {
             logError("play", error);
