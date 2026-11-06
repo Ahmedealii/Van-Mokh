@@ -1,36 +1,12 @@
-# Visual Studio build and cache
 .vs/
-.vscode/
-[Dd]ebug/
-[Rr]elease/
 x64/
-x86/
-[Aa]rm/
-[Aa]rm64/
-*.tlog
-
-# Visual Studio user specific files
-*.user
-*.userosv
-*.suo
-*.sln.docstates
-
-# Visual Studio / compiler output and artifacts
+Debug/
+Release/
 *.obj
-*.ilk
-*.pdb
-*.idb
 *.exe
+*.pdb
+*.ilk
+*.tlog
+*.idb
 *.log
-*.recipe
-*.lastbuildstate
-*.FileListAbsolute.txt
-*.opendb
-*.db
-*.VC.db
-
-# Backup and log files
-*~
-*.bak
-*.orig
-UpgradeLog*.htm
+.publish-LastBranch/
